@@ -1,37 +1,45 @@
-# 上游流域降雨量数据
+# 云鹏电站上游流域降雨量数据
 
-这是一个公开的静态数据网页，目标为云南16个地区展示分时段实测降雨量。
+公开静态网页，用于记录16个地区的逐小时实况降雨量及每日两个时段汇总。
 
-## 已上传内容
-- `index.html`：网页表格和数据读取
-- `data/rainfall.json`：数据文件
-- `scripts/collect.py`：采集脚本安全占位
-- `.github/workflows/rainfall.yml`：每天两次定时运行框架
+## 地区顺序
 
-## 重要：实测数据接口尚未接入
-目前没有确认云南天气网提供可稳定访问的16地实测累计降雨接口及站点映射。因此采集脚本不会填充0或伪造数值，网页空白表示暂无经过核实的数据。城市天气预报页面不能当作历史实测雨量来源。
+曲靖地区：曲靖、陆良  
+昆明地区：宜良、石林  
+玉溪地区：澄江、江川、玉溪、峨山、通海、华宁  
+红河地区：建水、蒙自、石屏、开远、弥勒、泸西
+
+## 数据来源和重要限制
+
+采集程序尝试读取中国天气网公开实况接口：
+`https://d1.weather.com.cn/sk_2d/{area_code}.html`
+
+公开的实况页面展示1小时和24小时降水要素；接口字段与可用性可能调整。程序只接受可解析的实况观测字段，不会使用预报降水替代实测降水，也不会将接口失败、缺测或解析失败记为0。首次运行应检查 GitHub Actions 日志中的16个地区字段识别结果；如果源站调整字段，采集会保留空值并输出错误。
+
+中国天气网SmartWeatherAPI为官方申请制接口，需要提交申请并经审核后获取接口信息。当前项目没有使用该需申请的API凭证。
 
 ## 统计口径
-- 早间：前一日21:00—当日07:00
-- 晚间：当日08:00—20:00
-- 晚间最终值需要用24小时总量减早间值进行校验。
 
-## 启用 GitHub Pages
+- 逐小时采集：北京时间每小时40分执行一次，尽量在源站小时数据更新后采集。
+- 早间：前一日21时至当日07时，要求11个小时观测齐全才给出直接合计。
+- 晚间：当日08时至20时，要求13个小时观测齐全才给出直接合计。
+- 晚间校验：`晚间最终值 = 24小时总量 - 早间合计`。若早间和24小时总量齐全，优先以此差值作为最终晚间值；同时保存直接累计值、差异和校验状态。
+- 原始逐小时记录保留最近48小时，日汇总记录长期保留。
+- 缺测不补零；负差值或不完整数据不会伪装成有效结果。
+
+## GitHub Pages
+
 仓库 Settings -> Pages -> Build and deployment：
-1. Source 选择 Deploy from a branch
-2. Branch 选择 main
-3. Folder 选择 /(root)
-4. 点击 Save
+1. Source: Deploy from a branch
+2. Branch: main
+3. Folder: /(root)
 
-网页地址：https://Gyd792.github.io/upstream-rainfall/
+网页：https://Gyd792.github.io/upstream-rainfall/
 
-## Actions 权限
-仓库 Settings -> Actions -> General -> Workflow permissions，选择 Read and write permissions 并保存，允许定时任务写回数据文件。Actions 也可能需要在 Actions 页面首次手动启用。
+## GitHub Actions
 
-## 定时
-- `40 23 * * *` UTC = 北京时间次日07:40
-- `40 12 * * *` UTC = 北京时间20:40
-GitHub schedule 可能延迟，不能保证精确到分钟。
+已要求 Workflow permissions = Read and write permissions。工作流每小时40分UTC运行（对应北京时间每小时40分），07:40生成早间汇总，20:40生成晚间汇总。GitHub schedule 可能延迟，不能保证精确到分钟。
 
-## 费用
-保持仓库 Public，使用 GitHub Pages 和标准公共仓库 Actions runner；不启用 Codespaces、付费 Marketplace 或 Larger runners，不绑定付款方式。平台免费政策可能变化，无法保证永久不变。
+## 免费使用注意
+
+工作流使用GitHub公共仓库的标准托管runner，不配置外部付费天气API，不添加付款信息。GitHub的免费政策可能变化，因此不能承诺平台永久不变。中国天气网公开网页和接口的访问、使用仍须遵守其服务条款和版权声明。
