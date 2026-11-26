@@ -127,22 +127,18 @@ def parse_observation_time(data: dict[str, Any], now: datetime) -> datetime:
         raise ValueError("observation timestamp field not found")
     raw = str(value).strip()
     date_raw = str(date_value).strip() if date_value is not None else ""
-    # Common China Weather format: date=YYYYMMDD and time=HH:mm.
-    if date_raw and re.fullmatch(r"\\d{8}", date_raw):
-        for fmt in ("%Y%m%d %H:%M", "%Y%m%d %H:%M:%S"):
-            try:
-                parsed = datetime.strptime(date_raw + " " + raw, fmt)
-                return parsed.replace(tzinfo=BEIJING)
-            except ValueError:
-                pass
-    # The observed endpoint actually returns dates like "11月26日(星期四)".
-    chinese_date = re.search(r"(\\d{1,2})月(\\d{1,2})日", date_raw)
-    if chinese_date:
+    # China Weather feed date can be YYYYMMDD or "11月26日(星期四)".
+    chinese_date = re.search(r"(\d{1,2})月(\d{1,2})日", date_raw)
+    date_prefix = None
+    if date_raw and re.fullmatch(r"\d{8}", date_raw):
+        date_prefix = date_raw
+    elif chinese_date:
         month, day = int(chinese_date.group(1)), int(chinese_date.group(2))
         year = now.year
         if month > now.month + 1:
             year -= 1
         date_prefix = f"{year:04d}{month:02d}{day:02d}"
+    if date_prefix:
         for fmt in ("%Y%m%d %H:%M", "%Y%m%d %H:%M:%S"):
             try:
                 parsed = datetime.strptime(date_prefix + " " + raw, fmt)
@@ -156,7 +152,7 @@ def parse_observation_time(data: dict[str, Any], now: datetime) -> datetime:
             return parsed.replace(tzinfo=BEIJING)
         except ValueError:
             pass
-    match = re.fullmatch(r"(\\d{1,2}):(\\d{2})", raw)
+    match = re.fullmatch(r"(\d{1,2}):(\d{2})", raw)
     if match:
         parsed = now.replace(hour=int(match.group(1)), minute=int(match.group(2)),
                              second=0, microsecond=0)
