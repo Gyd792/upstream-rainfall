@@ -244,7 +244,7 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
     date_str = now.date().isoformat()
     records = data.setdefault("records", [])
     # Morning report is finalized by the 07:40 Beijing run.
-    if now.hour == 7:
+    if now.hour in (7, 8):
         morning_values, _ = [], []
         for i in range(len(CITIES)):
             morning, _evening = build_daily_record(date_str, i, data.get("hourly_observations", []))
@@ -258,7 +258,7 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
             records.append(row)
 
     # Evening report is finalized by the 20:40 Beijing run.
-    if now.hour == 20:
+    if now.hour in (20, 21):
         evening_values, total_values, statuses = [], [], []
         for i in range(len(CITIES)):
             _morning, evening = build_daily_record(date_str, i, data.get("hourly_observations", []))
@@ -277,9 +277,9 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
     records.sort(key=lambda r: (r.get("date", ""), r.get("period", "")))
     data["records"] = records
     # Keep an append-only audit trail of each daily-summary generation.
-    if now.hour in (7, 20):
+    if now.hour in (7, 8, 20, 21):
         snapshots = data.setdefault("summary_history", [])
-        period = "morning" if now.hour == 7 else "evening"
+        period = "morning" if now.hour in (7, 8) else "evening"
         current = next((r for r in records if r.get("date") == date_str and r.get("period") == period), None)
         if current:
             snapshots.append({**current, "snapshot_at": now.isoformat(timespec="minutes")})
