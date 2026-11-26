@@ -1,0 +1,21 @@
+{
+  "id": "/upstream-rainfall/",
+  "name": "云鹏电站上游流域降雨量数据",
+  "short_name": "上游降雨",
+  "description": "上游流域16个地区逐小时降雨量监测与历史查询",
+  "lang": "zh-CN",
+  "start_url": "/upstream-rainfall/",
+  "scope": "/upstream-rainfall/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f4f7fb",
+  "theme_color": "#173b60",
+  "icons": [
+    {
+      "src": "./icons/rain.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
