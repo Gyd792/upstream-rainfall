@@ -135,6 +135,20 @@ def parse_observation_time(data: dict[str, Any], now: datetime) -> datetime:
                 return parsed.replace(tzinfo=BEIJING)
             except ValueError:
                 pass
+    # The observed endpoint actually returns dates like "11月26日(星期四)".
+    chinese_date = re.search(r"(\\d{1,2})月(\\d{1,2})日", date_raw)
+    if chinese_date:
+        month, day = int(chinese_date.group(1)), int(chinese_date.group(2))
+        year = now.year
+        if month > now.month + 1:
+            year -= 1
+        date_prefix = f"{year:04d}{month:02d}{day:02d}"
+        for fmt in ("%Y%m%d %H:%M", "%Y%m%d %H:%M:%S"):
+            try:
+                parsed = datetime.strptime(date_prefix + " " + raw, fmt)
+                return parsed.replace(tzinfo=BEIJING)
+            except ValueError:
+                pass
     for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S",
                 "%Y%m%d%H%M", "%Y%m%d%H", "%Y-%m-%dT%H:%M:%S"):
         try:
