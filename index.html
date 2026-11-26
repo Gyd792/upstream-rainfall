@@ -191,7 +191,6 @@ fetch('./data/rainfall.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Err
  window.addEventListener('resize',drawHourlyChart);
  drawHourlyChart();
 }).catch(err=>{$('lastUpdate').textContent='数据文件读取失败';$('queryStatus').textContent=err.message;$('tableBody').innerHTML='<tr><td class="empty" colspan="17">暂时无法读取数据文件，请稍后刷新。</td></tr>';});
-</script>
 
 let pwaInstallPrompt=null;
 const installBtn=document.getElementById('installApp');
@@ -217,5 +216,7 @@ async function refreshRainData(){
  }catch(err){console.warn('Rainfall refresh:',err);}
 }
 setInterval(refreshRainData,5*60*1000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshRainData();});
+</script>
 </body>
 </html>
