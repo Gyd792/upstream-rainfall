@@ -43,6 +43,18 @@ main{padding:20px clamp(12px,2.5vw,32px) 36px;max-width:1800px;margin:auto}
     </div>
   </section>
   <section class="panel">
+    <div class="toolbar">
+      <strong>逐小时降雨量柱状图</strong>
+      <label class="field">地区<select id="chartCity"></select></label>
+      <label class="field">日期<input type="date" id="chartDate"></label>
+    </div>
+    <div style="position:relative;margin-top:14px">
+      <canvas id="hourChart" height="230" style="width:100%;display:block"></canvas>
+      <div id="chartTip" style="display:none;position:absolute;z-index:5;background:#173b60;color:#fff;padding:7px 10px;border-radius:6px;font-size:12px;pointer-events:none"></div>
+    </div>
+    <p class="foot" id="chartNote">柱状图使用已采集的逐小时实况快照；鼠标悬停可查看数值和观测时间。缺测小时不补零。</p>
+  </section>
+  <section class="panel">
     <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
       <strong>降雨量历史记录表</strong>
       <span class="pill">横向滚动可查看全部16个地区；鼠标悬停数值可查看记录说明</span>
@@ -106,7 +118,39 @@ function render(){
   return '<tr><td>'+esc(date)+'<br><span class="pill">21:00—07:00</span></td>'+m.join('')+'</tr><tr><td>'+esc(date)+'<br><span class="pill">08:00—20:00</span></td>'+e.join('')+'</tr>';
  }).join('');
 }
-function exportCsv(){
+
+function drawHourlyChart(){
+ const city=$('chartCity').value,date=$('chartDate').value,canvas=$('hourChart'),tip=$('chartTip');
+ const ctx=canvas.getContext('2d'),rect=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+ canvas.width=Math.max(300,Math.floor(rect.width*dpr));canvas.height=230*dpr;
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ const w=rect.width,hh=230,left=42,right=14,top=16,bottom=34,plotW=w-left-right,plotH=hh-top-bottom;
+ ctx.clearRect(0,0,w,hh);
+ const rows=(Array.isArray(window.rainData?.hourly_observations)?window.rainData.hourly_observations:[])
+  .filter(o=>o.city===city&&String(o.date)===date)
+  .sort((a,b)=>String(a.observed_at).localeCompare(String(b.observed_at)));
+ const byHour=new Map(rows.map(o=>[Number(o.hour),o]));
+ const hours=Array.from({length:24},(_,i)=>i),values=hours.map(x=>byHour.get(x)?.rain_1h_mm??null);
+ const max=Math.max(1,...values.filter(v=>v!==null).map(Number)),scale=Math.ceil(max);
+ ctx.strokeStyle='#e4eaf0';ctx.fillStyle='#718096';ctx.font='12px Arial';ctx.textAlign='right';
+ for(let n=0;n<=4;n++){const y=top+plotH-n*plotH/4;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.fillText((scale*n/4).toFixed(1),left-8,y+4);}
+ const slot=plotW/24,bars=[];
+ hours.forEach((hour,i)=>{const v=values[i],x=left+i*slot+slot*.2,bw=slot*.6,bh=v===null?0:v/scale*plotH,y=top+plotH-bh;
+  if(v!==null){ctx.fillStyle='#4285bd';ctx.fillRect(x,y,bw,bh);}
+  bars.push({x:left+i*slot,y:top,w:slot,h:plotH,hour,value:v,obs:byHour.get(hour)});
+  if(i%2===0){ctx.fillStyle='#718096';ctx.textAlign='center';ctx.fillText(String(hour).padStart(2,'0'),left+i*slot+slot/2,hh-12);}
+ });
+ ctx.fillStyle='#718096';ctx.textAlign='left';ctx.fillText('mm',5,12);
+ canvas.onmousemove=e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,b=bars.find(z=>x>=z.x&&x<z.x+z.w&&y>=top&&y<=top+plotH);
+  if(!b){tip.style.display='none';return;}
+  const stamp=b.obs?.observed_at||'该小时无采集记录';
+  tip.textContent=String(b.hour).padStart(2,'0')+':00 · '+(b.value===null?'缺测':Number(b.value).toFixed(1)+' mm')+' · '+stamp;
+  tip.style.display='block';tip.style.left=Math.min(w-245,Math.max(0,x+10))+'px';tip.style.top=Math.max(0,y-34)+'px';
+ };
+ canvas.onmouseleave=()=>tip.style.display='none';
+ $('chartNote').textContent=rows.length+' 条实况观测；柱高为接口返回的1小时降水字段。它是每小时采集时的观测值，不等同于网页图表每个小时柱的历史归档，需与原网页同一时刻逐项核验。';
+}
+\nfunction exportCsv(){
  const lines=[['时间',...cities]];
  const dates=[...new Set(allRecords.map(r=>r.date).filter(Boolean))].sort().filter(d=>(!$('dateFrom').value||d>=$('dateFrom').value)&&(!$('dateTo').value||d<=$('dateTo').value));
  for(const date of dates){const d=rowsForDate(date);lines.push([date+' 前一日21:00—当日07:00',...cities.map((c,i)=>cityValue(d.morning,i)??'')]);lines.push([date+' 当日08:00—20:00',...cities.map((c,i)=>d.corrected[i]??'')]);}
@@ -117,10 +161,18 @@ $('searchBtn').addEventListener('click',render);
 $('resetBtn').addEventListener('click',()=>{$('dateFrom').value='';$('dateTo').value='';render();});
 $('exportBtn').addEventListener('click',exportCsv);
 fetch('./data/rainfall.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('数据文件读取失败');return r.json();}).then(data=>{
+ window.rainData=data;
  allRecords=Array.isArray(data.records)?data.records:[];
  $('lastUpdate').textContent='数据更新时间：'+(data.updated_at||'暂无');
  $('queryStatus').textContent='已读取数据文件；实测记录 '+allRecords.length+' 条';
  render();
+ $('chartCity').innerHTML=cities.map(c=>'<option>'+c+'</option>').join('');
+ const dates=[...new Set((data.hourly_observations||[]).map(o=>o.date))].sort();
+ $('chartDate').value=dates.at(-1)||'';
+ $('chartCity').addEventListener('change',drawHourlyChart);
+ $('chartDate').addEventListener('change',drawHourlyChart);
+ window.addEventListener('resize',drawHourlyChart);
+ drawHourlyChart();
 }).catch(err=>{$('lastUpdate').textContent='数据文件读取失败';$('queryStatus').textContent=err.message;$('tableBody').innerHTML='<tr><td class="empty" colspan="17">暂时无法读取数据文件，请稍后刷新。</td></tr>';});
 </script>
 </body>
