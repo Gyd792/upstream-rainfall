@@ -44,10 +44,11 @@ main{padding:20px clamp(12px,2.5vw,32px) 36px;max-width:1800px;margin:auto}
   </section>
   <section class="panel">
     <div class="toolbar">
-      <strong>逐小时降雨量柱状图</strong>
-      <label class="field">地区<select id="chartCity"></select></label>
+      <strong>16个地区逐小时降雨量柱状图</strong>
+      <label class="field">切换地区<select id="chartCity"></select></label>
       <label class="field">日期<input type="date" id="chartDate"></label>
     </div>
+    <div id="cityQuickSwitch" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px" aria-label="快速切换16个地区"></div>
     <div style="position:relative;margin-top:14px">
       <canvas id="hourChart" height="230" style="width:100%;display:block"></canvas>
       <div id="chartTip" style="display:none;position:absolute;z-index:5;background:#173b60;color:#fff;padding:7px 10px;border-radius:6px;font-size:12px;pointer-events:none"></div>
@@ -119,6 +120,15 @@ function render(){
  }).join('');
 }
 
+function renderCityQuickSwitch(){
+ const host=$('cityQuickSwitch');
+ host.innerHTML=cities.map((city,i)=>'<button type="button" class="secondary city-chip" data-city="'+esc(city)+'" aria-pressed="'+(i===cities.indexOf($('chartCity').value))+'">'+esc(city)+'</button>').join('');
+ host.querySelectorAll('[data-city]').forEach(btn=>btn.addEventListener('click',()=>{
+  $('chartCity').value=btn.dataset.city;
+  renderCityQuickSwitch();
+  drawHourlyChart();
+ }));
+}
 function drawHourlyChart(){
  const city=$('chartCity').value,date=$('chartDate').value,canvas=$('hourChart'),tip=$('chartTip');
  const ctx=canvas.getContext('2d'),rect=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
@@ -169,8 +179,9 @@ fetch('./data/rainfall.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Err
  $('chartCity').innerHTML=cities.map(c=>'<option>'+c+'</option>').join('');
  const dates=[...new Set((data.hourly_observations||[]).map(o=>o.date))].sort();
  $('chartDate').value=dates.at(-1)||'';
- $('chartCity').addEventListener('change',drawHourlyChart);
+ $('chartCity').addEventListener('change',()=>{renderCityQuickSwitch();drawHourlyChart();});
  $('chartDate').addEventListener('change',drawHourlyChart);
+ renderCityQuickSwitch();
  window.addEventListener('resize',drawHourlyChart);
  drawHourlyChart();
 }).catch(err=>{$('lastUpdate').textContent='数据文件读取失败';$('queryStatus').textContent=err.message;$('tableBody').innerHTML='<tr><td class="empty" colspan="17">暂时无法读取数据文件，请稍后刷新。</td></tr>';});
