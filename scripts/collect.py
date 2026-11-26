@@ -39,9 +39,10 @@ CITIES = [
 
 RAIN_1H_KEYS = ("rain1h", "rain_1h", "precip1h", "precip_1h",
                 "precipitation1h", "rainfall1h", "rain")
-RAIN_24H_KEYS = ("rain24h", "rain_24h", "precip24h", "precip_24h",
-                 "precipitation24h", "rainfall24h", "rain24")
-TIME_KEYS = ("time", "observeTime", "obstime", "dateTime", "datetime", "publishTime")
+RAIN_24H_KEYS = ("rain24", "rain24h", "rain_24h", "precip24h", "precip_24h",
+                 "precipitation24h", "rainfall24h")
+TIME_KEYS = ("observeTime", "obstime", "dateTime", "datetime", "publishTime", "time")
+DATE_KEYS = ("date", "observeDate", "observationDate")
 
 
 def load_data() -> dict[str, Any]:
@@ -121,9 +122,19 @@ def as_mm(value: Any) -> float | None:
 
 def parse_observation_time(data: dict[str, Any], now: datetime) -> datetime:
     value, _ = pick(data, TIME_KEYS)
+    date_value, _ = pick(data, DATE_KEYS)
     if value is None:
         raise ValueError("observation timestamp field not found")
     raw = str(value).strip()
+    date_raw = str(date_value).strip() if date_value is not None else ""
+    # Common China Weather format: date=YYYYMMDD and time=HH:mm.
+    if date_raw and re.fullmatch(r"\\d{8}", date_raw):
+        for fmt in ("%Y%m%d %H:%M", "%Y%m%d %H:%M:%S"):
+            try:
+                parsed = datetime.strptime(date_raw + " " + raw, fmt)
+                return parsed.replace(tzinfo=BEIJING)
+            except ValueError:
+                pass
     for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S",
                 "%Y%m%d%H%M", "%Y%m%d%H", "%Y-%m-%dT%H:%M:%S"):
         try:
@@ -131,14 +142,13 @@ def parse_observation_time(data: dict[str, Any], now: datetime) -> datetime:
             return parsed.replace(tzinfo=BEIJING)
         except ValueError:
             pass
-    # Some feeds return HH:mm only; accept it only if it is close to this run.
-    match = re.fullmatch(r"(\d{1,2}):(\d{2})", raw)
+    match = re.fullmatch(r"(\\d{1,2}):(\\d{2})", raw)
     if match:
         parsed = now.replace(hour=int(match.group(1)), minute=int(match.group(2)),
                              second=0, microsecond=0)
         if abs((now - parsed).total_seconds()) <= 3 * 3600:
             return parsed
-    raise ValueError(f"unrecognized observation timestamp: {raw}")
+    raise ValueError(f"unrecognized observation timestamp: {raw}; date={date_raw or 'missing'}")
 
 
 def fetch_city(name: str, code: str, now: datetime) -> dict[str, Any]:
