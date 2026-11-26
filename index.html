@@ -1,1 +1,127 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>上游流域降雨量数据</title><style>body{font:14px Arial,sans-serif;background:#f3f6fa;color:#203247;margin:0}header{background:#15395f;color:white;padding:24px}main{padding:18px;overflow:auto}table{border-collapse:collapse;background:white;min-width:1200px;width:100%}th,td{border:1px solid #bac8d6;padding:8px;text-align:center}th{background:#e2ebf4}.note{background:#fff5df;padding:12px;margin-bottom:12px}</style></head><body><header><h1>上游流域降雨量数据</h1>云南16个地区 · 降雨量单位：mm</header><main><p class="note">早间：前一日21:00—当日07:00；晚间：当日08:00—20:00。晚间最终值按24小时总量减早间值校验。空白不代表0毫米。</p><p id="updated">正在读取数据…</p><table><thead><tr><th>日期</th><th>地区</th><th>早间雨量</th><th>晚间雨量（校验后）</th><th>24小时总量</th><th>校验状态</th></tr></thead><tbody id="rows"></tbody></table><p>说明：当前尚未接入经验证的官方实测降雨接口，因此不显示虚构数值。</p></main><script>const cities=['曲靖','陆良','宜良','石林','澄江','江川','玉溪','峨山','通海','华宁','建水','蒙自','石屏','开远','弥勒','泸西'];fetch('./data/rainfall.json').then(r=>r.json()).then(d=>{document.querySelector('#updated').textContent='数据生成时间：'+(d.updated_at||'暂无');document.querySelector('#rows').innerHTML=(d.records||[]).map(r=>{let evening=r.morning_mm!=null&&r.total_24h_mm!=null?Math.max(0,+(r.total_24h_mm-r.morning_mm).toFixed(1)):(r.evening_mm??'');return '<tr><td>'+r.date+'</td><td>'+cities[r.city_index]+'</td><td>'+(r.morning_mm??'')+'</td><td>'+evening+'</td><td>'+(r.total_24h_mm??'')+'</td><td>'+(r.validation_status||'待采集')+'</td></tr>'}).join('')}).catch(()=>document.querySelector('#updated').textContent='数据文件尚未准备好');</script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#173b60">
+<title>云鹏电站上游流域降雨量数据</title>
+<style>
+:root{--navy:#173b60;--blue:#2864a3;--ink:#23364a;--muted:#718096;--line:#d5dee8;--pale:#edf3f8;--bg:#f4f7fb;--green:#237a57;--amber:#a66a12}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 "Microsoft YaHei",Arial,sans-serif}
+header{background:linear-gradient(115deg,#153653,#245987);color:#fff;padding:25px clamp(16px,3vw,38px)}
+header h1{font-size:clamp(21px,3vw,30px);margin:0 0 6px;font-weight:700;letter-spacing:1px}
+header p{margin:0;color:#dce9f5}
+main{padding:20px clamp(12px,2.5vw,32px) 36px;max-width:1800px;margin:auto}
+.panel{background:#fff;border:1px solid #e1e8ef;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 3px 14px #203b5810}
+.summary{display:flex;gap:12px;flex-wrap:wrap}.metric{flex:1 1 210px;background:#f5f8fc;border-radius:9px;padding:12px 15px}.metric b{display:block;font-size:17px;color:var(--navy)}.metric span{font-size:12px;color:var(--muted)}
+.toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.field{display:flex;flex-direction:column;gap:4px;color:#526477;font-size:12px}input,button{font:inherit;border:1px solid #cbd6e2;border-radius:7px;padding:8px 10px;background:white;color:var(--ink)}button{cursor:pointer;background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600}button.secondary{background:#fff;color:var(--navy)}button:hover{filter:brightness(1.08)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px}table{border-collapse:collapse;min-width:1250px;width:100%;background:#fff;font-variant-numeric:tabular-nums}th,td{border:1px solid var(--line);padding:9px 8px;text-align:center;white-space:nowrap}thead th{background:#e8eff6;color:#253d55;font-weight:700}thead tr:first-child th{background:#dce7f1}thead th.sticky,tbody td:first-child{position:sticky;left:0;z-index:2;background:#f7f9fc}thead th.sticky{z-index:4}tbody tr:nth-child(4n+1),tbody tr:nth-child(4n+2){background:#fff}tbody tr:nth-child(4n+3),tbody tr:nth-child(4n+4){background:#fbfcfe}tbody tr:hover td{background:#f0f6fc}td.value{cursor:help}td.value:hover{outline:2px solid #7da7d3;outline-offset:-2px}.empty{padding:32px;color:var(--muted);text-align:center}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:10px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:#9aa9b8}.dot.ok{background:#31956d}.dot.warn{background:#d69a32}
+.status{font-size:12px;color:var(--muted)}.foot{font-size:12px;color:var(--muted);margin-top:14px}.region{font-weight:700}.rain{color:#1c578d;font-weight:650}.pill{display:inline-block;border-radius:20px;padding:2px 8px;background:#edf3f8;color:#526477;font-size:11px}
+@media(max-width:700px){header{padding:19px 15px}main{padding:12px}.panel{padding:12px}.metric{flex-basis:140px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>云鹏电站上游流域降雨量数据</h1>
+  <p>上游流域16个地区 · 分时段降雨量监测与历史记录 · 单位：mm</p>
+</header>
+<main>
+  <section class="panel summary">
+    <div class="metric"><span>早间统计时段</span><b>前一日 21:00 — 当日 07:00</b><span>每日计划更新：07:40（北京时间）</span></div>
+    <div class="metric"><span>晚间统计时段</span><b>当日 08:00 — 20:00</b><span>每日计划更新：20:40（北京时间）</span></div>
+    <div class="metric"><span>数据记录</span><b id="recordCount">0 条</b><span id="lastUpdate">数据更新时间：读取中</span></div>
+  </section>
+  <section class="panel">
+    <div class="toolbar">
+      <label class="field">开始日期<input type="date" id="dateFrom"></label>
+      <label class="field">结束日期<input type="date" id="dateTo"></label>
+      <button id="searchBtn">查询</button>
+      <button class="secondary" id="resetBtn">重置</button>
+      <button class="secondary" id="exportBtn">导出 Excel 可打开的 CSV</button>
+      <span class="status" id="queryStatus">正在读取历史数据…</span>
+    </div>
+  </section>
+  <section class="panel">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <strong>降雨量历史记录表</strong>
+      <span class="pill">横向滚动可查看全部16个地区；鼠标悬停数值可查看记录说明</span>
+    </div>
+    <div class="table-wrap">
+      <table id="rainTable">
+        <thead>
+          <tr><th class="sticky" rowspan="3">时间</th><th colspan="16">降雨量（mm）</th></tr>
+          <tr><th colspan="2" class="region">曲靖地区</th><th colspan="2" class="region">昆明地区</th><th colspan="6" class="region">玉溪地区</th><th colspan="6" class="region">红河地区</th></tr>
+          <tr>
+            <th>曲靖</th><th>陆良</th><th>宜良</th><th>石林</th>
+            <th>澄江</th><th>江川</th><th>玉溪</th><th>峨山</th><th>通海</th><th>华宁</th>
+            <th>建水</th><th>蒙自</th><th>石屏</th><th>开远</th><th>弥勒</th><th>泸西</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"><tr><td class="empty" colspan="17">正在加载…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="legend"><span><i class="dot ok"></i>校验通过</span><span><i class="dot warn"></i>采用24小时总量差值</span><span><i class="dot"></i>暂无经核实数据（空白不代表0）</span></div>
+    <p class="foot">统计口径：早间为前一日21:00至当日07:00；晚间为当日08:00至20:00。晚间校验值 = 24小时总降雨量 − 早间降雨量。若直接累计值与校验值不同，以校验值作为最终晚间值。所有时间均按北京时间（UTC+8）记录。</p>
+  </section>
+</main>
+<script>
+const cities=['曲靖','陆良','宜良','石林','澄江','江川','玉溪','峨山','通海','华宁','建水','蒙自','石屏','开远','弥勒','泸西'];
+const groups=[['曲靖地区',0,2],['昆明地区',2,2],['玉溪地区',4,6],['红河地区',10,6]];
+let allRecords=[];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>v===null||v===undefined||v===''?null:Number(v);
+function cityValue(obj,i){if(!obj)return null;if(Array.isArray(obj))return num(obj[i]);return num(obj[cities[i]]??obj[String(i)]);}
+function rowsForDate(date){
+ const found=allRecords.filter(r=>r.date===date);
+ const morning=found.find(r=>r.period==='morning'||r.period==='早间')||found[0]||{};
+ const evening=found.find(r=>r.period==='evening'||r.period==='晚间')||found[1]||{};
+ const m=morning.values??morning.rainfall_mm??morning.morning??{};
+ const e=evening.values??evening.rainfall_mm??evening.evening??{};
+ const total=evening.total_24h_mm??morning.total_24h_mm??{};
+ const corrected={};
+ for(let i=0;i<16;i++){
+  const mv=cityValue(m,i);
+  let ev=cityValue(e,i);
+  const tv=cityValue(total,i);
+  if(tv!==null&&mv!==null){const calculated=Math.max(0,Number((tv-mv).toFixed(1)));ev=calculated;}
+  corrected[i]=ev;
+ }
+ return {morning:m,evening:e,corrected,total};
+}
+function makeCell(value,title=''){
+ const v=num(value);
+ return '<td class="value rain" title="'+esc(title||'暂无经核实的实测数据')+'">'+(v===null?'—':v.toFixed(1))+'</td>';
+}
+function render(){
+ const from=$('dateFrom').value,to=$('dateTo').value;
+ const dates=[...new Set(allRecords.map(r=>r.date).filter(Boolean))].sort().filter(d=>(!from||d>=from)&&(!to||d<=to));
+ $('recordCount').textContent=dates.length+' 天';
+ if(!dates.length){$('tableBody').innerHTML='<tr><td class="empty" colspan="17">所选日期暂无经过核实的降雨量记录。空白不代表0毫米。</td></tr>';return;}
+ $('tableBody').innerHTML=dates.map(date=>{
+  const d=rowsForDate(date);
+  const m=cities.map((c,i)=>makeCell(cityValue(d.morning,i),'早间：'+c+'；前一日21:00—当日07:00'));
+  const e=cities.map((c,i)=>makeCell(d.corrected[i],'晚间：'+c+'；当日08:00—20:00；按24小时总量减早间值校验'));
+  return '<tr><td>'+esc(date)+'<br><span class="pill">21:00—07:00</span></td>'+m.join('')+'</tr><tr><td>'+esc(date)+'<br><span class="pill">08:00—20:00</span></td>'+e.join('')+'</tr>';
+ }).join('');
+}
+function exportCsv(){
+ const lines=[['时间',...cities]];
+ const dates=[...new Set(allRecords.map(r=>r.date).filter(Boolean))].sort().filter(d=>(!$('dateFrom').value||d>=$('dateFrom').value)&&(!$('dateTo').value||d<=$('dateTo').value));
+ for(const date of dates){const d=rowsForDate(date);lines.push([date+' 前一日21:00—当日07:00',...cities.map((c,i)=>cityValue(d.morning,i)??'')]);lines.push([date+' 当日08:00—20:00',...cities.map((c,i)=>d.corrected[i]??'')]);}
+ const csv='\ufeff'+lines.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='云鹏电站上游流域降雨量数据.csv';a.click();URL.revokeObjectURL(a.href);
+}
+$('searchBtn').addEventListener('click',render);
+$('resetBtn').addEventListener('click',()=>{$('dateFrom').value='';$('dateTo').value='';render();});
+$('exportBtn').addEventListener('click',exportCsv);
+fetch('./data/rainfall.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('数据文件读取失败');return r.json();}).then(data=>{
+ allRecords=Array.isArray(data.records)?data.records:[];
+ $('lastUpdate').textContent='数据更新时间：'+(data.updated_at||'暂无');
+ $('queryStatus').textContent='已读取数据文件；实测记录 '+allRecords.length+' 条';
+ render();
+}).catch(err=>{$('lastUpdate').textContent='数据文件读取失败';$('queryStatus').textContent=err.message;$('tableBody').innerHTML='<tr><td class="empty" colspan="17">暂时无法读取数据文件，请稍后刷新。</td></tr>';});
+</script>
+</body>
+</html>
