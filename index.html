@@ -248,21 +248,46 @@ function exportCsv(){
 $('searchBtn').addEventListener('click',render);
 $('resetBtn').addEventListener('click',()=>{$('dateFrom').value='';$('dateTo').value='';render();});
 $('exportBtn').addEventListener('click',exportCsv);
-fetch('./data/rainfall.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('数据文件读取失败');return r.json();}).then(data=>{
- window.rainData=data;
- allRecords=Array.isArray(data.records)?data.records:[];
- $('lastUpdate').textContent='数据更新时间：'+(data.updated_at||'暂无');
- $('queryStatus').textContent='已读取数据文件；实测记录 '+allRecords.length+' 条';
- render();
- $('chartCity').innerHTML=cities.map(c=>'<option>'+c+'</option>').join('');
- const dates=[...new Set((data.hourly_observations||[]).map(o=>o.collection_date||o.date))].sort();
- $('chartDate').value=dates.at(-1)||'';
- $('chartCity').addEventListener('change',()=>{renderCityQuickSwitch();drawHourlyChart();drawRolling24Chart();});
- $('chartDate').addEventListener('change',drawHourlyChart);
- renderCityQuickSwitch();
- window.addEventListener('resize',()=>{drawHourlyChart();drawRolling24Chart();});
- drawHourlyChart();drawRolling24Chart();
-}).catch(err=>{$('lastUpdate').textContent='数据文件读取失败';$('queryStatus').textContent=err.message;$('tableBody').innerHTML='<tr><td class="empty" colspan="17">暂时无法读取数据文件，请稍后刷新。</td></tr>';});
+let dataLoading=false;
+async function loadRainData({silent=false}={}){
+ if(dataLoading)return;
+ dataLoading=true;
+ try{
+  const response=await fetch('./data/rainfall.json?refresh='+Date.now(),{cache:'no-store'});
+  if(!response.ok)throw new Error('数据文件读取失败（HTTP '+response.status+'）');
+  const data=await response.json();
+  window.rainData=data;
+  allRecords=Array.isArray(data.records)?data.records:[];
+  const observations=Array.isArray(data.hourly_observations)?data.hourly_observations:[];
+  $('lastUpdate').textContent='数据更新时间：'+(data.updated_at||'暂无');
+  $('queryStatus').textContent='已读取 '+observations.length+' 条逐小时快照；最近采集 '+(data.last_collection?.checked_at||'未知')+'；成功 '+(data.last_collection?.success_count??'—')+'/'+(data.last_collection?.expected_count??16);
+  render();
+  const selectedCity=$('chartCity').value||cities[0];
+  if(!$('chartCity').options.length){
+   $('chartCity').innerHTML=cities.map(c=>'<option>'+c+'</option>').join('');
+  }
+  $('chartCity').value=cities.includes(selectedCity)?selectedCity:cities[0];
+  const dates=[...new Set(observations.map(o=>o.collection_date||o.date).filter(Boolean))].sort();
+  if(!$('chartDate').value||!dates.includes($('chartDate').value))$('chartDate').value=dates.at(-1)||'';
+  renderCityQuickSwitch();
+  drawHourlyChart();
+  drawRolling24Chart();
+  if(!silent)$('rolling24Status').textContent=observations.length?'已载入逐小时历史记录；系统每5分钟自动检查新数据':'尚无逐小时观测记录，等待下一次采集';
+ }catch(err){
+  $('lastUpdate').textContent='数据读取失败';
+  $('queryStatus').textContent=err.message;
+  if(!silent)$('rolling24Status').textContent='暂时无法更新数据；保留上次显示内容';
+ }finally{dataLoading=false;}
+}
+$('chartCity').addEventListener('change',()=>{renderCityQuickSwitch();drawHourlyChart();drawRolling24Chart();});
+$('chartDate').addEventListener('change',drawHourlyChart);
+window.addEventListener('resize',()=>{drawHourlyChart();drawRolling24Chart();});
+$('searchBtn').addEventListener('click',render);
+$('resetBtn').addEventListener('click',()=>{$('dateFrom').value='';$('dateTo').value='';render();});
+$('exportBtn').addEventListener('click',exportCsv);
+loadRainData();
+setInterval(()=>{if(document.visibilityState==='visible')loadRainData({silent:true});},5*60*1000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')loadRainData({silent:true});});
 
 let pwaInstallPrompt=null;
 const installBtn=document.getElementById('installApp');
