@@ -276,6 +276,13 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
             records.append(row)
     records.sort(key=lambda r: (r.get("date", ""), r.get("period", "")))
     data["records"] = records
+    # Keep an append-only audit trail of each daily-summary generation.
+    if now.hour in (7, 20):
+        snapshots = data.setdefault("summary_history", [])
+        period = "morning" if now.hour == 7 else "evening"
+        current = next((r for r in records if r.get("date") == date_str and r.get("period") == period), None)
+        if current:
+            snapshots.append({**current, "snapshot_at": now.isoformat(timespec="minutes")})
 
 
 def main() -> int:
@@ -306,23 +313,20 @@ def main() -> int:
             print(f"ERROR {name} ({code}): {exc}")
         time.sleep(0.5)
 
-    # Keep a rolling 48-hour raw series; finalized daily summaries remain permanent.
-    cutoff = now - timedelta(hours=48)
-    kept = []
+    # Keep the complete raw observation archive; never prune historical rows.
+    # Retries with the same city + observation timestamp are idempotent.
+    unique = {}
     for item in observations:
-        try:
-            stamp = datetime.fromisoformat(item["observed_at"])
-            if stamp >= cutoff:
-                kept.append(item)
-        except Exception:
-            continue
-    data["hourly_observations"] = sorted(kept, key=lambda x: (x.get("observed_at", ""), x.get("city", "")))
+        unique[(item.get("city"), item.get("observed_at"))] = item
+    data["hourly_observations"] = sorted(
+        unique.values(), key=lambda x: (x.get("observed_at", ""), x.get("city", "")))
     update_rollups(data, now)
     data["updated_at"] = now.isoformat(timespec="minutes")
     data["last_collection"] = {
         "checked_at": now.isoformat(timespec="minutes"),
         "success_count": success, "expected_count": len(CITIES),
         "failures": failures,
+        "history_policy": "append-only by city and observation timestamp",
         "source": "https://d1.weather.com.cn/sk_2d/{area_code}.html",
     }
     data["note"] = "空值表示未取得完整且可核实的实测数据，不代表0毫米；逐小时实况缺测不会补零。"
