@@ -171,8 +171,7 @@ function exportCsv(){
  const lines=[['时间',...cities]];
  const dates=[...new Set(allRecords.map(r=>r.date).filter(Boolean))].sort().filter(d=>(!$('dateFrom').value||d>=$('dateFrom').value)&&(!$('dateTo').value||d<=$('dateTo').value));
  for(const date of dates){const d=rowsForDate(date);lines.push([date+' 前一日21:00—当日07:00',...cities.map((c,i)=>cityValue(d.morning,i)??'')]);lines.push([date+' 当日08:00—20:00',...cities.map((c,i)=>d.corrected[i]??'')]);}
- const csv='\ufeff'+lines.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r
-');
+ const csv='\ufeff'+lines.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='云鹏电站上游流域降雨量数据.csv';a.click();URL.revokeObjectURL(a.href);
 }
 $('searchBtn').addEventListener('click',render);
