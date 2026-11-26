@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#173b60">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/rain.svg" type="image/svg+xml">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>云鹏电站上游流域降雨量数据</title>
 <style>
 :root{--navy:#173b60;--blue:#2864a3;--ink:#23364a;--muted:#718096;--line:#d5dee8;--pale:#edf3f8;--bg:#f4f7fb;--green:#237a57;--amber:#a66a12}
@@ -25,6 +30,7 @@ main{padding:20px clamp(12px,2.5vw,32px) 36px;max-width:1800px;margin:auto}
 <header>
   <h1>云鹏电站上游流域降雨量数据</h1>
   <p>上游流域16个地区 · 分时段降雨量监测与历史记录 · 单位：mm</p>
+  <button id="installApp" style="display:none;margin-top:12px;background:#fff;color:#173b60;border-color:#fff">安装到手机</button>
 </header>
 <main>
   <section class="panel summary">
@@ -186,5 +192,30 @@ fetch('./data/rainfall.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Err
  drawHourlyChart();
 }).catch(err=>{$('lastUpdate').textContent='数据文件读取失败';$('queryStatus').textContent=err.message;$('tableBody').innerHTML='<tr><td class="empty" colspan="17">暂时无法读取数据文件，请稍后刷新。</td></tr>';});
 </script>
+
+let pwaInstallPrompt=null;
+const installBtn=document.getElementById('installApp');
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();pwaInstallPrompt=e;installBtn.style.display='inline-block';});
+installBtn?.addEventListener('click',async()=>{if(!pwaInstallPrompt)return; pwaInstallPrompt.prompt(); await pwaInstallPrompt.userChoice; pwaInstallPrompt=null; installBtn.style.display='none';});
+window.addEventListener('appinstalled',()=>{installBtn.style.display='none';});
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('Service worker registration failed',err)));}
+async function refreshRainData(){
+ try{
+  const response=await fetch('./data/rainfall.json?refresh='+Date.now(),{cache:'no-store'});
+  if(!response.ok)throw new Error('数据更新请求失败');
+  const fresh=await response.json();
+  if(fresh.updated_at!==window.rainData?.updated_at){
+   window.rainData=fresh;allRecords=Array.isArray(fresh.records)?fresh.records:[];
+   $('lastUpdate').textContent='数据更新时间：'+(fresh.updated_at||'暂无');
+   $('queryStatus').textContent='已自动更新；实测记录 '+allRecords.length+' 条';
+   render();
+   const ds=[...new Set((fresh.hourly_observations||[]).map(o=>o.date))].sort();
+   const oldDate=$('chartDate').value;
+   $('chartDate').value=ds.includes(oldDate)?oldDate:(ds.at(-1)||'');
+   drawHourlyChart();
+  }
+ }catch(err){console.warn('Rainfall refresh:',err);}
+}
+setInterval(refreshRainData,5*60*1000);
 </body>
 </html>
