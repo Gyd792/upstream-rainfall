@@ -1,0 +1,60 @@
+name: Administrator manual rainfall backfill
+on:
+  workflow_dispatch:
+    inputs:
+      city:
+        description: "补录地区"
+        required: true
+        type: choice
+        options: [曲靖, 陆良, 宜良, 石林, 澄江, 江川, 玉溪, 峨山, 通海, 华宁, 建水, 蒙自, 石屏, 开远, 弥勒, 泸西]
+      date:
+        description: "观测日期（北京时间 YYYY-MM-DD）"
+        required: true
+        type: string
+      hour:
+        description: "观测小时（北京时间 00-23）"
+        required: true
+        type: string
+      rain_mm:
+        description: "1小时降雨量（mm，无雨填0）"
+        required: true
+        type: string
+      rain24_mm:
+        description: "可选：同一时刻24小时总降雨量（mm）"
+        required: false
+        type: string
+      note:
+        description: "数据来源或补录说明"
+        required: false
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: rainfall-collection
+  cancel-in-progress: false
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate and write shared backfill
+        env:
+          BACKFILL_CITY: ${{ inputs.city }}
+          BACKFILL_DATE: ${{ inputs.date }}
+          BACKFILL_HOUR: ${{ inputs.hour }}
+          BACKFILL_RAIN_MM: ${{ inputs.rain_mm }}
+          BACKFILL_RAIN24_MM: ${{ inputs.rain24_mm }}
+          BACKFILL_NOTE: ${{ inputs.note }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: python scripts/backfill.py
+      - name: Commit shared rainfall data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+users.noreply.github.com"
+          git add data/rainfall.json
+          git commit -m "Manually backfill rainfall observation"
+          git pull --rebase origin main
+          git push
