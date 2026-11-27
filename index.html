@@ -131,6 +131,27 @@ main{padding:20px clamp(12px,2.5vw,32px) 36px;max-width:1800px;margin:auto}
 const cities=['曲靖','陆良','宜良','石林','澄江','江川','玉溪','峨山','通海','华宁','建水','蒙自','石屏','开远','弥勒','泸西'];
 const groups=[['曲靖地区',0,2],['昆明地区',2,2],['玉溪地区',4,6],['红河地区',10,6]];
 let allRecords=[];
+let dataIndex={byHour:new Map(),byCity:new Map(),summaryRows:[]};
+function buildDataIndex(data){
+ const byHour=new Map(),byCity=new Map(),observations=Array.isArray(data?.hourly_observations)?data.hourly_observations:[];
+ for(const o of observations){
+  const stamp=o.collected_at||o.observed_at,ms=Date.parse(stamp),key=beijingHourKey(stamp);
+  if(!key||!Number.isFinite(ms))continue;
+  let cityMap=byCity.get(o.city);
+  if(!cityMap){cityMap={byHour:new Map(),latest:null};byCity.set(o.city,cityMap);}
+  const prev=cityMap.byHour.get(key);
+  if(!prev||ms>Date.parse(prev.collected_at||prev.observed_at))cityMap.byHour.set(key,o);
+  if(!cityMap.latest||ms>Date.parse(cityMap.latest.collected_at||cityMap.latest.observed_at))cityMap.latest=o;
+  let hourMap=byHour.get(key);
+  if(!hourMap){hourMap={};byHour.set(key,hourMap);}
+  const old=hourMap[o.city];
+  if(!old||ms>Date.parse(old.collected_at||old.observed_at))hourMap[o.city]=o;
+ }
+ const summaryRows=(Array.isArray(data?.records)?data.records:[])
+  .filter(r=>['morning','evening'].includes(r.period)&&r.date)
+  .sort((a,b)=>(a.date+(a.period==='morning'?'07:40':'20:40')).localeCompare(b.date+(b.period==='morning'?'07:40':'20:40')));
+ return {byHour,byCity,summaryRows,observationCount:observations.length};
+}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=v=>v===null||v===undefined||v===''?null:Number(v);
@@ -174,16 +195,7 @@ function setRecent24HourRange(){
  return true;
 }
 function latestHourlyRows(from='',to=''){
- const observations=Array.isArray(window.rainData?.hourly_observations)?window.rainData.hourly_observations:[];
- const grouped=new Map();
- observations.forEach(o=>{
-  const key=beijingHourKey(o.collected_at||o.observed_at);
-  if(!key||o.rain_1h_mm===null||o.rain_1h_mm===undefined)return;
-  if(!grouped.has(key))grouped.set(key,{});
-  const cityRows=grouped.get(key),old=cityRows[o.city];
-  if(!old||Date.parse(o.collected_at||o.observed_at)>Date.parse(old.collected_at||old.observed_at))cityRows[o.city]=o;
- });
- const existing=[...grouped.keys()].sort();
+ const grouped=dataIndex.byHour,existing=[...grouped.keys()].sort();
  if(!existing.length)return [];
  const start=from||existing[0],end=to||existing[existing.length-1];
  const startMs=Date.UTC(+start.slice(0,4),+start.slice(5,7)-1,+start.slice(8,10),+start.slice(11,13));
@@ -210,9 +222,7 @@ function render(){
    const hour=r.period==='morning'?7:20,minute=r.period==='morning'?40:40;
    return Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10),hour,minute);
   };
-  const recent=allRecords.filter(r=>['morning','evening'].includes(r.period)&&r.date)
-   .filter(r=>periodTime(r)>=windowStart&&periodTime(r)<=now)
-   .sort((x,y)=>periodTime(x)-periodTime(y));
+  const recent=dataIndex.summaryRows.filter(r=>periodTime(r)>=windowStart&&periodTime(r)<=now);
   $('recordCount').textContent=recent.length+' 条统计记录（最近24小时）';
   if(!recent.length){
    const date=beijingTodayString();
@@ -274,14 +284,7 @@ function drawHourlyChart(){
  const nowMs=Date.now()+8*3600000;
  const endMs=Math.floor(nowMs/3600000)*3600000;
  const startMs=endMs-23*3600000;
- const observations=Array.isArray(window.rainData?.hourly_observations)?window.rainData.hourly_observations:[];
- const byHour=new Map();
- observations.filter(o=>o.city===city).forEach(o=>{
-  const stamp=o.collected_at||o.observed_at,key=beijingHourKey(stamp);
-  if(!key)return;
-  const old=byHour.get(key);
-  if(!old||Date.parse(stamp)>Date.parse(old.collected_at||old.observed_at))byHour.set(key,o);
- });
+ const byHour=dataIndex.byCity.get(city)?.byHour||new Map();
  const slots=Array.from({length:24},(_,i)=>{
   const t=new Date(startMs+i*3600000),key=t.toISOString().slice(0,13);
   return {time:t,key,obs:byHour.get(key)||null};
@@ -321,26 +324,18 @@ function beijingHourKey(value){
  return new Date(ms+8*3600000).toISOString().slice(0,13);
 }
 function getRolling24Data(city){
- const observations=Array.isArray(window.rainData?.hourly_observations)?window.rainData.hourly_observations:[];
- const cityObservations=observations.filter(o=>o.city===city);
- const validTimes=cityObservations.map(o=>Date.parse(o.collected_at||o.observed_at)).filter(Number.isFinite);
- if(!validTimes.length)return {slots:[],latest:null};
- const latestMs=Math.max(...validTimes),latestKey=beijingHourKey(new Date(latestMs).toISOString());
+ const cityData=dataIndex.byCity.get(city);
+ if(!cityData?.latest)return {slots:[],latest:null};
+ const latest=cityData.latest,latestMs=Date.parse(latest.collected_at||latest.observed_at);
+ const latestKey=beijingHourKey(new Date(latestMs).toISOString());
  const yy=+latestKey.slice(0,4),mm=+latestKey.slice(5,7),dd=+latestKey.slice(8,10),hh=+latestKey.slice(11,13);
- const endMs=Date.UTC(yy,mm-1,dd,hh),byHour=new Map();
- cityObservations.forEach(o=>{
-  const key=beijingHourKey(o.collected_at||o.observed_at);if(!key)return;
-  const prev=byHour.get(key);
-  if(!prev||Date.parse(o.collected_at||o.observed_at)>Date.parse(prev.collected_at||prev.observed_at))byHour.set(key,o);
- });
+ const endMs=Date.UTC(yy,mm-1,dd,hh),byHour=cityData.byHour;
  const slots=[];
  for(let i=23;i>=0;i--){
   const t=new Date(endMs-i*3600000),key=t.toISOString().slice(0,13),match=byHour.get(key)||null;
   slots.push({time:t,value:match?.rain_1h_mm===null||match?.rain_1h_mm===undefined?null:Number(match.rain_1h_mm),obs:match});
  }
- const cityRows=cityObservations.filter(o=>Number.isFinite(Date.parse(o.collected_at||o.observed_at)))
-  .sort((a,b)=>Date.parse(b.collected_at||b.observed_at)-Date.parse(a.collected_at||a.observed_at));
- return {slots,latest:cityRows[0]||null};
+ return {slots,latest};
 }
 function drawRolling24Chart(){
  const city=$('chartCity').value,canvas=$('rolling24Chart'),tip=$('rolling24Tip');
@@ -434,6 +429,7 @@ async function loadRainData({silent=false}={}){
   if(!response.ok)throw new Error('数据文件读取失败（HTTP '+response.status+'）');
   const data=await response.json();
   window.rainData=data;
+  dataIndex=buildDataIndex(data);
   renderMissingReport(data);
   allRecords=Array.isArray(data.records)?data.records:[];
   if(!window.initialSummaryViewSet){
@@ -471,8 +467,6 @@ async function loadRainData({silent=false}={}){
 $('gapCitySelect').addEventListener('change',()=>renderMissingReport(window.rainData));
 $('chartCity').addEventListener('change',()=>{renderCityQuickSwitch();drawHourlyChart();drawRolling24Chart();});
 window.addEventListener('resize',()=>{drawHourlyChart();drawRolling24Chart();});
-$('searchBtn').addEventListener('click',render);
-$('exportBtn').addEventListener('click',exportCsv);
 loadRainData();
 setInterval(()=>{if(document.visibilityState==='visible')loadRainData({silent:true});},5*60*1000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')loadRainData({silent:true});});
