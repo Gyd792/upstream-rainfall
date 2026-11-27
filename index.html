@@ -77,6 +77,15 @@ main{padding:20px clamp(12px,2.5vw,32px) 36px;max-width:1800px;margin:auto}
     <p class="foot">图表按最新观测时刻向前取24个整点；缺测小时留空，不补零。接口滚动24小时累计值直接读取中国天气实况字段 rain24h；逐小时累计值仅在24个小时均有记录时才作为完整合计。历史数据从系统开始成功采集后逐步积累，无法自动补回启用前的小时记录。</p>
   </section>
   <section class="panel">
+    <div class="toolbar"><strong>最近24小时缺测检测（北京时间）</strong><span class="status" id="gapReportTime">正在计算…</span></div>
+    <div class="summary" style="margin-top:10px">
+      <div class="metric"><span>存在缺测的地区</span><b id="gapCityCount">—</b><span>自动列出每个地区缺失的整点</span></div>
+      <div class="metric"><span>检测范围</span><b id="gapWindow">最近24小时</b><span>空值不按0毫米统计</span></div>
+    </div>
+    <div id="gapReport" style="margin-top:12px;line-height:1.8;overflow-wrap:anywhere">正在读取缺测情况…</div>
+    <p class="foot">缺测表示对应北京时间小时没有有效实测记录；不会自动补零。管理员补录写入共享数据后，所有用户均可查看。</p>
+  </section>
+  <section class="panel">
     <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
       <strong>降雨量历史记录表</strong>
       <span class="pill">横向滚动可查看全部16个地区；鼠标悬停数值可查看记录说明</span>
@@ -182,20 +191,26 @@ function drawHourlyChart(){
  $('chartNote').textContent=rows.length+' 条实况观测；柱高为接口返回的1小时降水字段。它是每小时采集时的观测值，不等同于网页图表每个小时柱的历史归档，需与原网页同一时刻逐项核验。';
 }
 
+function beijingHourKey(value){
+ const ms=Date.parse(value||'');if(!Number.isFinite(ms))return null;
+ return new Date(ms+8*3600000).toISOString().slice(0,13);
+}
 function getRolling24Data(city){
  const observations=Array.isArray(window.rainData?.hourly_observations)?window.rainData.hourly_observations:[];
  const cityObservations=observations.filter(o=>o.city===city);
  const validTimes=cityObservations.map(o=>Date.parse(o.collected_at||o.observed_at)).filter(Number.isFinite);
  if(!validTimes.length)return {slots:[],latest:null};
- const latestMs=Math.max(...validTimes);
- const end=new Date(latestMs);
- end.setMinutes(0,0,0);
+ const latestMs=Math.max(...validTimes),latestKey=beijingHourKey(new Date(latestMs).toISOString());
+ const yy=+latestKey.slice(0,4),mm=+latestKey.slice(5,7),dd=+latestKey.slice(8,10),hh=+latestKey.slice(11,13);
+ const endMs=Date.UTC(yy,mm-1,dd,hh),byHour=new Map();
+ cityObservations.forEach(o=>{
+  const key=beijingHourKey(o.collected_at||o.observed_at);if(!key)return;
+  const prev=byHour.get(key);
+  if(!prev||Date.parse(o.collected_at||o.observed_at)>Date.parse(prev.collected_at||prev.observed_at))byHour.set(key,o);
+ });
  const slots=[];
  for(let i=23;i>=0;i--){
-  const t=new Date(end.getTime()-i*3600000);
-  const key=t.toISOString().slice(0,13);
-  const match=cityObservations.filter(o=>Number.isFinite(Date.parse(o.collected_at||o.observed_at))&&new Date(Date.parse(o.collected_at||o.observed_at)).toISOString().slice(0,13)===key)
-   .sort((a,b)=>Date.parse(b.collected_at||b.observed_at)-Date.parse(a.collected_at||a.observed_at))[0]||null;
+  const t=new Date(endMs-i*3600000),key=t.toISOString().slice(0,13),match=byHour.get(key)||null;
   slots.push({time:t,value:match?.rain_1h_mm===null||match?.rain_1h_mm===undefined?null:Number(match.rain_1h_mm),obs:match});
  }
  const cityRows=cityObservations.filter(o=>Number.isFinite(Date.parse(o.collected_at||o.observed_at)))
@@ -219,8 +234,8 @@ function drawRolling24Chart(){
  slots.forEach((slot,i)=>{
   const x=left+i*slotW+slotW*.18,bw=slotW*.64,v=slot.value,bh=v===null?0:v/scale*plotH,y=top+plotH-bh;
   if(v!==null){ctx.fillStyle='#2c83b9';ctx.fillRect(x,y,bw,bh);}
-  bars.push({x:left+i*slotW,w:slotW,hour:slot.time.getHours(),value:v,slot});
-  if(i%3===0){ctx.fillStyle='#718096';ctx.textAlign='center';ctx.fillText(String(slot.time.getHours()).padStart(2,'0')+':00',left+i*slotW+slotW/2,hh-12);}
+  bars.push({x:left+i*slotW,w:slotW,hour:slot.time.getUTCHours(),value:v,slot});
+  if(i%3===0){ctx.fillStyle='#718096';ctx.textAlign='center';ctx.fillText(String(slot.time.getUTCHours()).padStart(2,'0')+':00',left+i*slotW+slotW/2,hh-12);}
  });
  ctx.fillStyle='#718096';ctx.textAlign='left';ctx.fillText('mm',5,12);
  const full=slots.length===24&&known.length===24;
@@ -248,6 +263,19 @@ function exportCsv(){
 $('searchBtn').addEventListener('click',render);
 $('resetBtn').addEventListener('click',()=>{$('dateFrom').value='';$('dateTo').value='';render();});
 $('exportBtn').addEventListener('click',exportCsv);
+function renderMissingReport(data){
+ const report=data?.missing_hours_report,host=$('gapReport');
+ if(!report||!Array.isArray(report.cities)){host.textContent='缺测报告暂不可用；等待下一次采集。';return;}
+ $('gapReportTime').textContent='报告生成：'+(report.generated_at||'未知');
+ $('gapWindow').textContent=(report.window_start||'').replace('T',' ')+' 至 '+(report.window_end||'').replace('T',' ');
+ const rows=report.cities,missing=rows.filter(r=>(r.missing_hours||[]).length);
+ $('gapCityCount').textContent=missing.length+' / 16 个地区';
+ host.innerHTML=rows.map(r=>{
+  const m=r.missing_hours||[];
+  const detail=m.length?m.map(x=>x.slice(5).replace('T','日 ')+'时').join('、'):'完整（24/24）';
+  return '<div style="padding:7px 0;border-bottom:1px solid #edf1f5"><strong>'+esc(r.city)+'</strong> <span class="pill">'+r.coverage+'/24</span><div style="font-size:12px;color:'+(m.length?'#a66a12':'#237a57')+'">'+esc(detail)+'</div></div>';
+ }).join('');
+}
 let dataLoading=false;
 async function loadRainData({silent=false}={}){
  if(dataLoading)return;
@@ -257,6 +285,7 @@ async function loadRainData({silent=false}={}){
   if(!response.ok)throw new Error('数据文件读取失败（HTTP '+response.status+'）');
   const data=await response.json();
   window.rainData=data;
+  renderMissingReport(data);
   allRecords=Array.isArray(data.records)?data.records:[];
   const observations=Array.isArray(data.hourly_observations)?data.hourly_observations:[];
   $('lastUpdate').textContent='数据更新时间：'+(data.updated_at||'暂无');
@@ -301,7 +330,7 @@ async function refreshRainData(){
   if(!response.ok)throw new Error('数据更新请求失败');
   const fresh=await response.json();
   if(fresh.updated_at!==window.rainData?.updated_at){
-   window.rainData=fresh;allRecords=Array.isArray(fresh.records)?fresh.records:[];
+   window.rainData=fresh;renderMissingReport(fresh);allRecords=Array.isArray(fresh.records)?fresh.records:[];
    $('lastUpdate').textContent='数据更新时间：'+(fresh.updated_at||'暂无');
    $('queryStatus').textContent='已自动更新；实测记录 '+allRecords.length+' 条';
    render();
