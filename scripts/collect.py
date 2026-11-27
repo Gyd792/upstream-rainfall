@@ -236,50 +236,54 @@ def sum_hours(by_hour: dict[int, float | None], hours: list[int]) -> float | Non
 
 def build_daily_record(date_str: str, city_index: int,
                        obs: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Build official period values only when every hour in that period is present."""
     day = datetime.strptime(date_str, "%Y-%m-%d").date()
     prev = (day - timedelta(days=1)).isoformat()
     city_name = CITIES[city_index][0]
     selected = [o for o in obs if o.get("city") == city_name]
-    by_stamp: dict[tuple[str, int], float | None] = {}
     by_date_hour: dict[tuple[str, int], float | None] = {}
     for item in selected:
         sample_date = item.get("collection_date") or item["date"]
         sample_hour = int(item.get("collection_hour", item["hour"]))
-        key = (sample_date, sample_hour)
-        # Prefer the most recent duplicate observation for a clock hour.
-        by_date_hour[key] = item.get("rain_1h_mm")
+        by_date_hour[(sample_date, sample_hour)] = item.get("rain_1h_mm")
+
     morning_hours = [(prev, 21), (prev, 22), (prev, 23)] + [
         (date_str, h) for h in range(0, 8)]
     evening_hours = [(date_str, h) for h in range(8, 21)]
     morning_values = [by_date_hour.get(key) for key in morning_hours]
     evening_values = [by_date_hour.get(key) for key in evening_hours]
-    morning = None if any(v is None for v in morning_values) else round(sum(morning_values), 1)
-    direct_evening = None if any(v is None for v in evening_values) else round(sum(evening_values), 1)
+
+    morning_complete = all(v is not None for v in morning_values)
+    evening_complete = all(v is not None for v in evening_values)
+    morning = round(sum(morning_values), 1) if morning_complete else None
+    direct_evening = round(sum(evening_values), 1) if evening_complete else None
 
     latest_20 = [o for o in selected
                  if (o.get("collection_date") or o.get("date")) == date_str
                  and int(o.get("collection_hour", o.get("hour", -1))) == 20
                  and o.get("rain_24h_mm") is not None]
     total_24h = latest_20[-1]["rain_24h_mm"] if latest_20 else None
-    corrected = None
+
+    # A formal evening value requires all 13 hourly observations.
+    # If the 24-hour total and complete morning value are available,
+    # retain the established reconciliation rule: evening = 24h - morning.
+    evening_value = None
     status = "missing"
     difference = None
-    if morning is not None and total_24h is not None and total_24h >= morning:
-        corrected = round(total_24h - morning, 1)
-        if direct_evening is None:
-            status = "derived_24h_missing_hourly"
-        else:
-            difference = round(direct_evening - corrected, 1)
-            status = "matched" if abs(difference) <= 0.1 else "corrected_by_24h"
-    elif direct_evening is not None:
-        corrected = direct_evening
+    if evening_complete:
+        evening_value = direct_evening
         status = "direct_only_no_24h_validation"
+        if morning is not None and total_24h is not None and total_24h >= morning:
+            reconciled = round(total_24h - morning, 1)
+            difference = round(direct_evening - reconciled, 1)
+            evening_value = reconciled
+            status = "matched" if abs(difference) <= 0.1 else "corrected_by_24h"
 
     return (
         {"city": city_name, "morning_mm": morning,
          "coverage_morning": sum(v is not None for v in morning_values), "expected_morning": 11},
         {"city": city_name, "evening_direct_mm": direct_evening,
-         "evening_mm": corrected, "total_24h_mm": total_24h,
+         "evening_mm": evening_value, "total_24h_mm": total_24h,
          "validation_status": status, "difference_mm": difference,
          "coverage_evening": sum(v is not None for v in evening_values), "expected_evening": 13}
     )
