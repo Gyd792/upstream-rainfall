@@ -457,8 +457,7 @@ async function loadRainData({silent=false}={}){
    $('chartCity').innerHTML=cities.map(c=>'<option>'+c+'</option>').join('');
   }
   $('chartCity').value=cities.includes(selectedCity)?selectedCity:cities[0];
-  const dates=[...new Set(observations.map(o=>o.collection_date||o.date).filter(Boolean))].sort();
-  if(!$('chartDate').value||!dates.includes($('chartDate').value))$('chartDate').value=dates.at(-1)||'';
+  // chartDate was removed from the interface; do not access a missing element.
   renderCityQuickSwitch();
   drawHourlyChart();
   drawRolling24Chart();
@@ -471,7 +470,6 @@ async function loadRainData({silent=false}={}){
 }
 $('gapCitySelect').addEventListener('change',()=>renderMissingReport(window.rainData));
 $('chartCity').addEventListener('change',()=>{renderCityQuickSwitch();drawHourlyChart();drawRolling24Chart();});
-$('chartDate').addEventListener('change',drawHourlyChart);
 window.addEventListener('resize',()=>{drawHourlyChart();drawRolling24Chart();});
 $('searchBtn').addEventListener('click',render);
 $('exportBtn').addEventListener('click',exportCsv);
