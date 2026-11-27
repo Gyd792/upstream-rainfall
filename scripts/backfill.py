@@ -22,6 +22,39 @@ def main():
  if old: obs[obs.index(old)]=row
  else: obs.append(row)
  obs.sort(key=lambda x:(x.get("collected_at") or x.get("observed_at",""),x.get("city","")))
+ # Recalculate both daily business periods for the backfilled date from the shared archive.
+ prev=(datetime.strptime(date,"%Y-%m-%d").date()-timedelta(days=1)).isoformat()
+ morning_keys=[(prev,h) for h in (21,22,23)]+[(date,h) for h in range(8)]
+ evening_keys=[(date,h) for h in range(8,21)]
+ morning_values=[]; evening_values=[]; total_values=[]; direct_values=[]; statuses=[]
+ for name in CITIES:
+  by={}
+  for item in obs:
+   if item.get("city")!=name: continue
+   k=(item.get("collection_date") or item.get("date"),int(item.get("collection_hour",item.get("hour",-1))))
+   by[k]=item.get("rain_1h_mm")
+  mv=[by.get(k) for k in morning_keys]; ev=[by.get(k) for k in evening_keys]
+  morning=sum(mv) if all(v is not None for v in mv) else None
+  direct=sum(ev) if all(v is not None for v in ev) else None
+  candidates=[x for x in obs if x.get("city")==name and (x.get("collection_date") or x.get("date"))==date and int(x.get("collection_hour",x.get("hour",-1)))==20 and x.get("rain_24h_mm") is not None]
+  total=candidates[-1].get("rain_24h_mm") if candidates else None
+  if morning is not None and total is not None and total>=morning:
+   final=round(total-morning,1); status="matched" if direct is not None and abs(direct-final)<=0.1 else ("corrected_by_24h" if direct is not None else "derived_24h_missing_hourly")
+  elif direct is not None:
+   final=round(direct,1); status="direct_only_no_24h_validation"
+  else:
+   final=None; status="missing"
+  morning_values.append(round(morning,1) if morning is not None else None)
+  direct_values.append(round(direct,1) if direct is not None else None)
+  evening_values.append(final); total_values.append(total); statuses.append(status)
+ records=data.setdefault("records",[])
+ def upsert(period,row):
+  old=next((x for x in records if x.get("date")==date and x.get("period")==period),None)
+  if old: records[records.index(old)]=row
+  else: records.append(row)
+ upsert("morning",{"date":date,"period":"morning","values":morning_values,"source":"hourly observed precipitation; includes administrator backfill","updated_at":datetime.now(BEIJING).isoformat(timespec="minutes")})
+ upsert("evening",{"date":date,"period":"evening","values":evening_values,"evening_direct_mm":direct_values,"total_24h_mm":total_values,"validation_status":statuses,"source":"hourly observed precipitation; includes administrator backfill and 24-hour validation","updated_at":datetime.now(BEIJING).isoformat(timespec="minutes")})
+ records.sort(key=lambda x:(x.get("date",""),x.get("period","")))
  now=datetime.now(BEIJING).replace(second=0,microsecond=0); end=now.replace(minute=0)
  expected=[(end-timedelta(hours=i)).strftime("%Y-%m-%dT%H") for i in range(23,-1,-1)]; report=[]
  for name,code in CITIES.items():
