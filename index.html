@@ -164,6 +164,15 @@ function beijingInputKey(value){
  if(!value)return '';
  return value.replace('T',' ').slice(0,13);
 }
+function setRecent24HourRange(){
+ const rows=latestHourlyRows(),last=rows.at(-1)?.[0];
+ if(!last)return false;
+ const endMs=Date.UTC(+last.slice(0,4),+last.slice(5,7)-1,+last.slice(8,10),+last.slice(11,13));
+ const start=new Date(endMs-23*3600000).toISOString().slice(0,13);
+ $('dateFrom').value=start+':00';
+ $('dateTo').value=last+':00';
+ return true;
+}
 function latestHourlyRows(from='',to=''){
  const observations=Array.isArray(window.rainData?.hourly_observations)?window.rainData.hourly_observations:[];
  const grouped=new Map();
@@ -355,9 +364,7 @@ $('resetBtn').addEventListener('click',()=>{
  if($('recordMode').value==='summary'){
   $('dateFrom').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Shanghai'});
  }else{
-  const rows=latestHourlyRows(),last=rows.at(-1)?.[0];
-  if(last){const start=new Date(Date.UTC(+last.slice(0,4),+last.slice(5,7)-1,+last.slice(8,10),+last.slice(11,13))-23*3600000);$('dateFrom').value=start.toISOString().slice(0,13)+':00';$('dateTo').value=last+':00';}
-  else{$('dateFrom').value='';$('dateTo').value='';}
+  if(!setRecent24HourRange()){$('dateFrom').value='';$('dateTo').value='';}
  }
  render();
 });
@@ -394,6 +401,10 @@ async function loadRainData({silent=false}={}){
   const observations=Array.isArray(data.hourly_observations)?data.hourly_observations:[];
   $('lastUpdate').textContent='数据更新时间：'+(data.updated_at||'暂无');
   $('queryStatus').textContent='已读取 '+observations.length+' 条逐小时快照；最近采集 '+(data.last_collection?.checked_at||'未知')+'；成功 '+(data.last_collection?.success_count??'—')+'/'+(data.last_collection?.expected_count??16);
+  if(!window.initialHourlyRangeSet && $('recordMode').value==='hourly'){
+   setRecent24HourRange();
+   window.initialHourlyRangeSet=true;
+  }
   render();
   const selectedCity=$('chartCity').value||cities[0];
   if(!$('chartCity').options.length){
@@ -417,7 +428,6 @@ $('chartCity').addEventListener('change',()=>{renderCityQuickSwitch();drawHourly
 $('chartDate').addEventListener('change',drawHourlyChart);
 window.addEventListener('resize',()=>{drawHourlyChart();drawRolling24Chart();});
 $('searchBtn').addEventListener('click',render);
-$('resetBtn').addEventListener('click',()=>{$('dateFrom').value='';$('dateTo').value='';render();});
 $('exportBtn').addEventListener('click',exportCsv);
 loadRainData();
 setInterval(()=>{if(document.visibilityState==='visible')loadRainData({silent:true});},5*60*1000);
