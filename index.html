@@ -77,7 +77,14 @@ main{padding:20px clamp(12px,2.5vw,32px) 36px;max-width:1800px;margin:auto}
     <p class="foot">图表按最新观测时刻向前取24个整点；缺测小时留空，不补零。接口滚动24小时累计值直接读取中国天气实况字段 rain24h；逐小时累计值仅在24个小时均有记录时才作为完整合计。历史数据从系统开始成功采集后逐步积累，无法自动补回启用前的小时记录。</p>
   </section>
   <section class="panel">
-    <div class="toolbar"><strong>最近24小时缺测检测（北京时间）</strong><span class="status" id="gapReportTime">正在计算…</span></div>
+    <div class="toolbar" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <strong>最近24小时缺测检测（北京时间）</strong>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <label for="gapCitySelect">选择地区</label>
+        <select id="gapCitySelect" aria-label="选择需要查看缺测情况的地区" style="padding:8px 10px;border:1px solid #d7e0ea;border-radius:8px;background:#fff;color:#26384a;min-width:110px"></select>
+        <span class="status" id="gapReportTime">正在计算…</span>
+      </div>
+    </div>
     <div class="summary" style="margin-top:10px">
       <div class="metric"><span>存在缺测的地区</span><b id="gapCityCount">—</b><span>自动列出每个地区缺失的整点</span></div>
       <div class="metric"><span>检测范围</span><b id="gapWindow">最近24小时</b><span>空值不按0毫米统计</span></div>
@@ -235,7 +242,7 @@ function drawRolling24Chart(){
   const x=left+i*slotW+slotW*.18,bw=slotW*.64,v=slot.value,bh=v===null?0:v/scale*plotH,y=top+plotH-bh;
   if(v!==null){ctx.fillStyle='#2c83b9';ctx.fillRect(x,y,bw,bh);}
   bars.push({x:left+i*slotW,w:slotW,hour:slot.time.getUTCHours(),value:v,slot});
-  if(i%3===0){ctx.fillStyle='#718096';ctx.textAlign='center';ctx.fillText(String(slot.time.getUTCHours()).padStart(2,'0')+':00',left+i*slotW+slotW/2,hh-12);}
+  if(i%2===0){ctx.fillStyle='#718096';ctx.textAlign='center';ctx.fillText(String(slot.time.getUTCHours()).padStart(2,'0')+':00',left+i*slotW+slotW/2,hh-12);}
  });
  ctx.fillStyle='#718096';ctx.textAlign='left';ctx.fillText('mm',5,12);
  const full=slots.length===24&&known.length===24;
@@ -264,18 +271,23 @@ $('searchBtn').addEventListener('click',render);
 $('resetBtn').addEventListener('click',()=>{$('dateFrom').value='';$('dateTo').value='';render();});
 $('exportBtn').addEventListener('click',exportCsv);
 function renderMissingReport(data){
- const report=data?.missing_hours_report,host=$('gapReport');
+ const report=data?.missing_hours_report,host=$('gapReport'),selector=$('gapCitySelect');
  if(!report||!Array.isArray(report.cities)){host.textContent='缺测报告暂不可用；等待下一次采集。';return;}
+ if(selector&&!selector.options.length){
+  selector.innerHTML=cities.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
+  selector.value=cities.includes($('chartCity')?.value)?$('chartCity').value:cities[0];
+ }
  $('gapReportTime').textContent='报告生成：'+(report.generated_at||'未知');
  $('gapWindow').textContent=(report.window_start||'').replace('T',' ')+' 至 '+(report.window_end||'').replace('T',' ');
  const rows=report.cities,missing=rows.filter(r=>(r.missing_hours||[]).length);
  $('gapCityCount').textContent=missing.length+' / 16 个地区';
- host.innerHTML=rows.map(r=>{
-  const m=r.missing_hours||[];
-  const detail=m.length?m.map(x=>x.slice(5).replace('T','日 ')+'时').join('、'):'完整（24/24）';
-  return '<div style="padding:7px 0;border-bottom:1px solid #edf1f5"><strong>'+esc(r.city)+'</strong> <span class="pill">'+r.coverage+'/24</span><div style="font-size:12px;color:'+(m.length?'#a66a12':'#237a57')+'">'+esc(detail)+'</div></div>';
- }).join('');
+ const selected=selector?.value||cities[0],r=rows.find(x=>x.city===selected);
+ if(!r){host.textContent='所选地区暂无缺测报告。';return;}
+ const m=r.missing_hours||[];
+ const detail=m.length?m.map(x=>x.slice(5).replace('T','日 ')+'时').join('、'):'无缺测（24/24小时完整）';
+ host.innerHTML='<div style="padding:10px 12px;border:1px solid #e5ebf2;border-radius:8px"><strong>'+esc(r.city)+'</strong> <span class="pill">'+r.coverage+'/24 小时有效</span><div style="margin-top:7px;font-size:13px;color:'+(m.length?'#a66a12':'#237a57')+'">'+esc(m.length?'缺少：'+detail:detail)+'</div></div>';
 }
+
 let dataLoading=false;
 async function loadRainData({silent=false}={}){
  if(dataLoading)return;
@@ -308,6 +320,7 @@ async function loadRainData({silent=false}={}){
   if(!silent)$('rolling24Status').textContent='暂时无法更新数据；保留上次显示内容';
  }finally{dataLoading=false;}
 }
+$('gapCitySelect').addEventListener('change',()=>renderMissingReport(window.rainData));
 $('chartCity').addEventListener('change',()=>{renderCityQuickSwitch();drawHourlyChart();drawRolling24Chart();});
 $('chartDate').addEventListener('change',drawHourlyChart);
 window.addEventListener('resize',()=>{drawHourlyChart();drawRolling24Chart();});
