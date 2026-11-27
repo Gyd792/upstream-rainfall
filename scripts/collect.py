@@ -296,11 +296,13 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
             morning_values.append(morning["morning_mm"])
         existing = next((r for r in records if r.get("date") == date_str and r.get("period") == "morning"), None)
         row = {"date": date_str, "period": "morning", "values": morning_values,
-               "source": "hourly observed precipitation", "updated_at": now.isoformat(timespec="minutes")}
-        if existing:
-            records[records.index(existing)] = row
-        else:
-            records.append(row)
+               "source": "hourly observed precipitation",
+               "updated_at": existing.get("updated_at") if existing and existing.get("values") == morning_values else now.isoformat(timespec="minutes")}
+        if not existing or existing.get("values") != morning_values:
+            if existing:
+                records[records.index(existing)] = row
+            else:
+                records.append(row)
 
     # Evening report is finalized by the 20:40 Beijing run.
     if (now.hour == 20 and now.minute >= 40) or (now.hour == 21 and now.minute <= 10):
@@ -314,11 +316,12 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
         row = {"date": date_str, "period": "evening", "values": evening_values,
                "total_24h_mm": total_values, "validation_status": statuses,
                "source": "hourly observed precipitation; checked against 24-hour total",
-               "updated_at": now.isoformat(timespec="minutes")}
-        if existing:
-            records[records.index(existing)] = row
-        else:
-            records.append(row)
+               "updated_at": existing.get("updated_at") if existing and existing.get("values") == evening_values and existing.get("total_24h_mm") == total_values and existing.get("validation_status") == statuses else now.isoformat(timespec="minutes")}
+        if not existing or existing.get("values") != evening_values or existing.get("total_24h_mm") != total_values or existing.get("validation_status") != statuses:
+            if existing:
+                records[records.index(existing)] = row
+            else:
+                records.append(row)
     records.sort(key=lambda r: (r.get("date", ""), r.get("period", "")))
     data["records"] = records
     # Keep an append-only audit trail of each daily-summary generation.
@@ -327,8 +330,11 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
         period = "morning" if (now.hour == 7 or now.hour == 8) else "evening"
         current = next((r for r in records if r.get("date") == date_str and r.get("period") == period), None)
         if current:
-            snapshots[:] = [s for s in snapshots if not (s.get("date") == date_str and s.get("period") == period)]
-            snapshots.append({**current, "snapshot_at": now.isoformat(timespec="minutes")})
+            previous = next((s for s in snapshots if s.get("date") == date_str and s.get("period") == period), None)
+            changed = previous is None or any(previous.get(k) != current.get(k) for k in ("values", "total_24h_mm", "validation_status"))
+            if changed:
+                snapshots[:] = [s for s in snapshots if not (s.get("date") == date_str and s.get("period") == period)]
+                snapshots.append({**current, "snapshot_at": now.isoformat(timespec="minutes")})
 
 
 def main() -> int:
