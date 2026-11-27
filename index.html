@@ -300,7 +300,7 @@ function exportCsv(){
  const rows=latestHourlyRows().filter(([key])=>(!from||key>=from)&&(!to||key<=to));
  const lines=[['观测时间（北京时间）',...cities]];
  rows.forEach(([key,byCity])=>lines.push([key.replace('T',' ')+':00',...cities.map(c=>byCity[c]?.rain_1h_mm??'')]));
- const csv='\\ufeff'+lines.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\\r\\n');
+ const csv='\ufeff'+lines.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='云鹏电站逐小时降雨量查询.csv';a.click();URL.revokeObjectURL(a.href);
 }
 
