@@ -223,7 +223,7 @@ def build_missing_report(data: dict[str, Any], now: datetime) -> dict[str, Any]:
         rows.append({"city": name, "code": code, "coverage": 24-len(missing),
                      "expected": 24, "missing_hours": missing})
     return {"timezone": "Asia/Shanghai (UTC+08:00)", "window_start": expected[0],
-            "window_end": expected[-1], "generated_at": now.isoformat(timespec="minutes"),
+            "window_end": expected[-1], "generated_at": end.isoformat(timespec="minutes"),
             "cities": rows}
 
 
@@ -289,7 +289,7 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
     date_str = now.date().isoformat()
     records = data.setdefault("records", [])
     # Morning report is finalized by the 07:40 Beijing run.
-    if (now.hour == 7 and now.minute >= 40) or now.hour == 8:
+    if (now.hour == 7 and now.minute >= 40) or (now.hour == 8 and now.minute <= 10):
         morning_values, _ = [], []
         for i in range(len(CITIES)):
             morning, _evening = build_daily_record(date_str, i, data.get("hourly_observations", []))
@@ -303,7 +303,7 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
             records.append(row)
 
     # Evening report is finalized by the 20:40 Beijing run.
-    if (now.hour == 20 and now.minute >= 40) or now.hour == 21:
+    if (now.hour == 20 and now.minute >= 40) or (now.hour == 21 and now.minute <= 10):
         evening_values, total_values, statuses = [], [], []
         for i in range(len(CITIES)):
             _morning, evening = build_daily_record(date_str, i, data.get("hourly_observations", []))
@@ -322,9 +322,9 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
     records.sort(key=lambda r: (r.get("date", ""), r.get("period", "")))
     data["records"] = records
     # Keep an append-only audit trail of each daily-summary generation.
-    if ((now.hour == 7 and now.minute >= 40) or now.hour == 8 or (now.hour == 20 and now.minute >= 40) or now.hour == 21):
+    if ((now.hour == 7 and now.minute >= 40) or (now.hour == 8 and now.minute <= 10) or (now.hour == 20 and now.minute >= 40) or (now.hour == 21 and now.minute <= 10)):
         snapshots = data.setdefault("summary_history", [])
-        period = "morning" if now.hour in (7, 8) else "evening"
+        period = "morning" if (now.hour == 7 or now.hour == 8) else "evening"
         current = next((r for r in records if r.get("date") == date_str and r.get("period") == period), None)
         if current:
             snapshots[:] = [s for s in snapshots if not (s.get("date") == date_str and s.get("period") == period)]
