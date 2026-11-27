@@ -106,7 +106,7 @@
     }
   ],
   "note": "空值表示未取得完整且可核实的实测数据，不代表0毫米；缺测小时不会补零。自动采集每5分钟重试，同一地区同一北京时间小时仅保留一条记录。",
-  "updated_at": "2026-11-28T02:02+08:00",
+  "updated_at": "2026-11-28T02:04+08:00",
   "regions": [
     {
       "name": "曲靖地区",
@@ -6084,7 +6084,7 @@
     }
   ],
   "last_collection": {
-    "checked_at": "2026-11-28T02:02+08:00",
+    "checked_at": "2026-11-28T02:04+08:00",
     "success_count": 16,
     "expected_count": 16,
     "failures": [],
@@ -6269,7 +6269,7 @@
     "timezone": "Asia/Shanghai (UTC+08:00)",
     "window_start": "2026-11-27T03",
     "window_end": "2026-11-28T02",
-    "generated_at": "2026-11-28T02:02+08:00",
+    "generated_at": "2026-11-28T02:00+08:00",
     "cities": [
       {
         "city": "曲靖",
