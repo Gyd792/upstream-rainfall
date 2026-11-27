@@ -164,7 +164,7 @@ def parse_observation_time(data: dict[str, Any], now: datetime) -> datetime:
 def fetch_city(name: str, code: str, now: datetime) -> dict[str, Any]:
     url = BASE_URL.format(code=code) + f"?_={int(time.time() * 1000)}"
     request = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(request, timeout=20) as response:
+    with urllib.request.urlopen(request, timeout=10) as response:
         body = response.read().decode("utf-8", errors="replace")
     data = extract_object(body)
     rain1, rain1_key = pick(data, RAIN_1H_KEYS)
@@ -185,6 +185,46 @@ def fetch_city(name: str, code: str, now: datetime) -> dict[str, Any]:
         "field_1h": rain1_key, "field_24h": rain24_key,
         "status": "ok",
     }
+
+
+def fetch_city_with_retry(name: str, code: str, now: datetime, attempts: int = 3) -> dict[str, Any]:
+    last_error: Exception | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            return fetch_city(name, code, now)
+        except Exception as exc:
+            last_error = exc
+            if attempt < attempts:
+                delay = attempt * 2
+                print(f"RETRY {name} ({code}) in {delay}s: {exc}")
+                time.sleep(delay)
+    raise RuntimeError(f"failed after {attempts} attempts: {last_error}")
+
+
+def build_missing_report(data: dict[str, Any], now: datetime) -> dict[str, Any]:
+    end = now.replace(minute=0, second=0, microsecond=0)
+    expected = [(end - timedelta(hours=i)).strftime("%Y-%m-%dT%H") for i in range(23, -1, -1)]
+    observations = data.get("hourly_observations", [])
+    rows = []
+    for name, code in CITIES:
+        available = set()
+        for item in observations:
+            if item.get("city") != name or item.get("rain_1h_mm") is None:
+                continue
+            stamp = item.get("collected_at") or item.get("observed_at")
+            if not stamp:
+                continue
+            try:
+                dt = datetime.fromisoformat(stamp).astimezone(BEIJING)
+                available.add(dt.strftime("%Y-%m-%dT%H"))
+            except (TypeError, ValueError):
+                continue
+        missing = [hour for hour in expected if hour not in available]
+        rows.append({"city": name, "code": code, "coverage": 24-len(missing),
+                     "expected": 24, "missing_hours": missing})
+    return {"timezone": "Asia/Shanghai (UTC+08:00)", "window_start": expected[0],
+            "window_end": expected[-1], "generated_at": now.isoformat(timespec="minutes"),
+            "cities": rows}
 
 
 def sum_hours(by_hour: dict[int, float | None], hours: list[int]) -> float | None:
@@ -249,7 +289,7 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
     date_str = now.date().isoformat()
     records = data.setdefault("records", [])
     # Morning report is finalized by the 07:40 Beijing run.
-    if now.hour in (7, 8):
+    if (now.hour == 7 and now.minute >= 40) or now.hour == 8:
         morning_values, _ = [], []
         for i in range(len(CITIES)):
             morning, _evening = build_daily_record(date_str, i, data.get("hourly_observations", []))
@@ -263,7 +303,7 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
             records.append(row)
 
     # Evening report is finalized by the 20:40 Beijing run.
-    if now.hour in (20, 21):
+    if (now.hour == 20 and now.minute >= 40) or now.hour == 21:
         evening_values, total_values, statuses = [], [], []
         for i in range(len(CITIES)):
             _morning, evening = build_daily_record(date_str, i, data.get("hourly_observations", []))
@@ -282,11 +322,12 @@ def update_rollups(data: dict[str, Any], now: datetime) -> None:
     records.sort(key=lambda r: (r.get("date", ""), r.get("period", "")))
     data["records"] = records
     # Keep an append-only audit trail of each daily-summary generation.
-    if now.hour in (7, 8, 20, 21):
+    if ((now.hour == 7 and now.minute >= 40) or now.hour == 8 or (now.hour == 20 and now.minute >= 40) or now.hour == 21):
         snapshots = data.setdefault("summary_history", [])
         period = "morning" if now.hour in (7, 8) else "evening"
         current = next((r for r in records if r.get("date") == date_str and r.get("period") == period), None)
         if current:
+            snapshots[:] = [s for s in snapshots if not (s.get("date") == date_str and s.get("period") == period)]
             snapshots.append({**current, "snapshot_at": now.isoformat(timespec="minutes")})
 
 
@@ -302,44 +343,57 @@ def main() -> int:
         {"name": "红河地区", "cities": ["建水", "蒙自", "石屏", "开远", "弥勒", "泸西"]},
     ])
     observations = data.setdefault("hourly_observations", [])
+    before = json.dumps(data, ensure_ascii=False, sort_keys=True)
     success = 0
     failures = []
-    for index, (name, code) in enumerate(CITIES):
+    for name, code in CITIES:
         try:
-            observation = fetch_city(name, code, now)
-            # Replace same city + observation timestamp, preserving a single record.
-            # Save one snapshot per city per collection hour. Keep the source
-            # observation timestamp separately because it may lag collection time.
-            observations = [o for o in observations
-                            if not (o.get("city") == name and
-                                    (o.get("collected_at") or o.get("observed_at")) == observation["collected_at"])]
-            observations.append(observation)
+            observation = fetch_city_with_retry(name, code, now, attempts=3)
+            key = (name, observation["collection_date"], observation["collection_hour"])
+            old = next((o for o in observations
+                        if (o.get("city"), o.get("collection_date") or o.get("date"),
+                            int(o.get("collection_hour", o.get("hour", -1)))) == key), None)
+            if old is None:
+                observations.append(observation)
+            elif (old.get("rain_1h_mm") != observation.get("rain_1h_mm")
+                  or old.get("rain_24h_mm") != observation.get("rain_24h_mm")
+                  or old.get("rain_1h_mm") is None):
+                observations[observations.index(old)] = observation
             success += 1
             print(f"OK {name}: {observation['observed_at']} 1h={observation['rain_1h_mm']}mm 24h={observation['rain_24h_mm']}mm")
         except Exception as exc:
             failures.append({"city": name, "code": code, "error": str(exc), "checked_at": now.isoformat()})
             print(f"ERROR {name} ({code}): {exc}")
-        time.sleep(0.5)
+        time.sleep(0.25)
 
-    # Keep the complete raw observation archive; never prune historical rows.
-    # Retries with the same city + observation timestamp are idempotent.
     unique = {}
-    for item in observations:
-        unique[(item.get("city"), item.get("collected_at") or item.get("observed_at"))] = item
+    for item in sorted(observations, key=lambda x: x.get("collected_at") or x.get("observed_at", "")):
+        key = (item.get("city"), item.get("collection_date") or item.get("date"),
+               int(item.get("collection_hour", item.get("hour", -1))))
+        previous = unique.get(key)
+        if previous is None or (previous.get("rain_1h_mm") is None and item.get("rain_1h_mm") is not None):
+            unique[key] = item
+        elif previous.get("rain_1h_mm") == item.get("rain_1h_mm") and previous.get("rain_24h_mm") == item.get("rain_24h_mm"):
+            unique[key] = item
     data["hourly_observations"] = sorted(
         unique.values(), key=lambda x: (x.get("collected_at") or x.get("observed_at", ""), x.get("city", "")))
     update_rollups(data, now)
-    data["updated_at"] = now.isoformat(timespec="minutes")
-    data["last_collection"] = {
-        "checked_at": now.isoformat(timespec="minutes"),
-        "success_count": success, "expected_count": len(CITIES),
-        "failures": failures,
-        "history_policy": "append-only hourly snapshots by city and collection timestamp",
-        "source": "https://d1.weather.com.cn/sk_2d/{area_code}.html",
-    }
-    data["note"] = "空值表示未取得完整且可核实的实测数据，不代表0毫米；逐小时实况缺测不会补零。"
-    DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Collection complete: {success}/{len(CITIES)} cities; failures={len(failures)}")
+    data["missing_hours_report"] = build_missing_report(data, now)
+    data["note"] = "空值表示未取得完整且可核实的实测数据，不代表0毫米；缺测小时不会补零。自动采集每5分钟重试，同一地区同一北京时间小时仅保留一条记录。"
+    after = json.dumps(data, ensure_ascii=False, sort_keys=True)
+    if after != before:
+        data["updated_at"] = now.isoformat(timespec="minutes")
+        data["last_collection"] = {
+            "checked_at": now.isoformat(timespec="minutes"),
+            "success_count": success, "expected_count": len(CITIES),
+            "failures": failures,
+            "history_policy": "one verified sample per city and Beijing clock hour; five-minute retries",
+            "source": "https://d1.weather.com.cn/sk_2d/{area_code}.html",
+        }
+        DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Saved updated rainfall data: {success}/{len(CITIES)} cities; failures={len(failures)}")
+    else:
+        print(f"No new hourly values; latest attempt succeeded for {success}/{len(CITIES)} cities.")
     return 0 if success > 0 else 1
 
 
