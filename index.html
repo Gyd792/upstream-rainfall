@@ -152,24 +152,33 @@ function beijingInputKey(value){
  if(!value)return '';
  return value.replace('T',' ').slice(0,13);
 }
-function latestHourlyRows(){
+function latestHourlyRows(from='',to=''){
  const observations=Array.isArray(window.rainData?.hourly_observations)?window.rainData.hourly_observations:[];
  const grouped=new Map();
  observations.forEach(o=>{
   const key=beijingHourKey(o.collected_at||o.observed_at);
-  if(!key)return;
-  if(o.rain_1h_mm===null||o.rain_1h_mm===undefined)return;
-  const k=key;
-  if(!grouped.has(k))grouped.set(k,{});
-  const cityRows=grouped.get(k),old=cityRows[o.city];
+  if(!key||o.rain_1h_mm===null||o.rain_1h_mm===undefined)return;
+  if(!grouped.has(key))grouped.set(key,{});
+  const cityRows=grouped.get(key),old=cityRows[o.city];
   if(!old||Date.parse(o.collected_at||o.observed_at)>Date.parse(old.collected_at||old.observed_at))cityRows[o.city]=o;
  });
- return [...grouped.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+ const existing=[...grouped.keys()].sort();
+ if(!existing.length)return [];
+ const start=from||existing[0],end=to||existing[existing.length-1];
+ const startMs=Date.UTC(+start.slice(0,4),+start.slice(5,7)-1,+start.slice(8,10),+start.slice(11,13));
+ const endMs=Date.UTC(+end.slice(0,4),+end.slice(5,7)-1,+end.slice(8,10),+end.slice(11,13));
+ if(!Number.isFinite(startMs)||!Number.isFinite(endMs)||startMs>endMs)return [];
+ const result=[];
+ for(let ms=startMs;ms<=endMs;ms+=3600000){
+  const key=new Date(ms).toISOString().slice(0,13);
+  result.push([key,grouped.get(key)||{}]);
+ }
+ return result;
 }
 function render(){
  const from=beijingInputKey($('dateFrom').value),to=beijingInputKey($('dateTo').value);
  if(from&&to&&from>to){$('tableBody').innerHTML='<tr><td class="empty" colspan="17">开始时间不能晚于结束时间。</td></tr>';$('recordCount').textContent='0 条';return;}
- const rows=latestHourlyRows().filter(([key])=>(!from||key>=from)&&(!to||key<=to));
+ const rows=latestHourlyRows(from,to);
  $('recordCount').textContent=rows.length+' 个小时';
  if(!rows.length){$('tableBody').innerHTML='<tr><td class="empty" colspan="17">所选时间段暂无有效逐小时降雨量记录。缺测保持空白，不按0毫米处理。</td></tr>';return;}
  $('tableBody').innerHTML=rows.map(([key,byCity])=>{
