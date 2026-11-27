@@ -244,7 +244,7 @@ function drawRolling24Chart(){
  $('rolling24Source').textContent=latest?'采集时间：'+(latest.collected_at||latest.observed_at)+'；接口观测时间：'+latest.observed_at:'该地区暂无观测记录';
  $('rolling24Sum').textContent=full?sum.toFixed(1)+' mm':'数据不完整';
  $('rolling24Coverage').textContent='有效小时数：'+known.length+'/24'+(full?'（完整）':'（缺测不补零）');
- $('rolling24Status').textContent=slots.length?'时间范围：'+slots[0].time.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+' 至 '+slots[23].time.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'暂无逐小时观测';
+ $('rolling24Status').textContent=slots.length?'北京时间：'+String(slots[0].time.getUTCMonth()+1).padStart(2,'0')+'月'+String(slots[0].time.getUTCDate()).padStart(2,'0')+'日 '+String(slots[0].time.getUTCHours()).padStart(2,'0')+':00 至 '+String(slots[23].time.getUTCMonth()+1).padStart(2,'0')+'月'+String(slots[23].time.getUTCDate()).padStart(2,'0')+'日 '+String(slots[23].time.getUTCHours()).padStart(2,'0')+':00':'暂无逐小时观测';
  canvas.onmousemove=e=>{
   const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,b=bars.find(z=>x>=z.x&&x<z.x+z.w&&y>=top&&y<=top+plotH);
   if(!b){tip.style.display='none';return;}
