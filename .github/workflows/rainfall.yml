@@ -1,8 +1,8 @@
-name: Hourly rainfall collection
+name: Rainfall collection (every 5 minutes)
 on:
   schedule:
-    # Every hour at minute 40 UTC (also minute 40 Beijing time).
-    - cron: "40 * * * *"
+    # GitHub Actions supports scheduled workflows at 5-minute intervals.
+    - cron: "*/5 * * * *"
   workflow_dispatch:
   push:
     branches: [main]
@@ -24,20 +24,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Collect observed precipitation and update rollups
-        run: |
-          for attempt in 1 2 3; do
-            python scripts/collect.py && break
-            if [ "$attempt" -eq 3 ]; then exit 1; fi
-            echo "Collection failed; retrying in 30 seconds (attempt $attempt/3)"
-            sleep 30
-          done
+      - name: Collect observed precipitation (three attempts per city)
+        run: python scripts/collect.py
       - name: Commit rainfall history
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+users.noreply.github.com"
           git add data/rainfall.json
-          git diff --cached --quiet || git commit -m "Collect hourly observed rainfall"
-          # Merge any dashboard/workflow commits made while collection was running.
+          git diff --cached --quiet || git commit -m "Update rainfall observations"
           git pull --rebase origin main
           git push
