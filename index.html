@@ -324,25 +324,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();pwaInstallP
 installBtn?.addEventListener('click',async()=>{if(!pwaInstallPrompt)return; pwaInstallPrompt.prompt(); await pwaInstallPrompt.userChoice; pwaInstallPrompt=null; installBtn.style.display='none';});
 window.addEventListener('appinstalled',()=>{installBtn.style.display='none';});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('Service worker registration failed',err)));}
-async function refreshRainData(){
- try{
-  const response=await fetch('./data/rainfall.json?refresh='+Date.now(),{cache:'no-store'});
-  if(!response.ok)throw new Error('数据更新请求失败');
-  const fresh=await response.json();
-  if(fresh.updated_at!==window.rainData?.updated_at){
-   window.rainData=fresh;renderMissingReport(fresh);allRecords=Array.isArray(fresh.records)?fresh.records:[];
-   $('lastUpdate').textContent='数据更新时间：'+(fresh.updated_at||'暂无');
-   $('queryStatus').textContent='已自动更新；实测记录 '+allRecords.length+' 条';
-   render();
-   const ds=[...new Set((fresh.hourly_observations||[]).map(o=>o.collection_date||o.date))].sort();
-   const oldDate=$('chartDate').value;
-   $('chartDate').value=ds.includes(oldDate)?oldDate:(ds.at(-1)||'');
-   drawHourlyChart();drawRolling24Chart();
-  }
- }catch(err){console.warn('Rainfall refresh:',err);}
-}
-setInterval(refreshRainData,5*60*1000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshRainData();});
+
 </script>
 </body>
 </html>
