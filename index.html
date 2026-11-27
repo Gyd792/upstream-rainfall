@@ -64,7 +64,7 @@ main{padding:20px clamp(12px,2.5vw,32px) 36px;max-width:1800px;margin:auto}
     <div class="toolbar">
       <strong>16个地区逐小时降雨量柱状图</strong>
       <label class="field">切换地区<select id="chartCity"></select></label>
-      <label class="field">日期<input type="date" id="chartDate"></label>
+      <span class="status" id="hourChartWindow">最近24小时（北京时间）</span>
     </div>
     <div id="cityQuickSwitch" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px" aria-label="快速切换16个地区"></div>
     <div style="position:relative;margin-top:14px">
@@ -247,35 +247,57 @@ function renderCityQuickSwitch(){
  }));
 }
 function drawHourlyChart(){
- const city=$('chartCity').value,date=$('chartDate').value,canvas=$('hourChart'),tip=$('chartTip');
+ const city=$('chartCity').value,canvas=$('hourChart'),tip=$('chartTip');
  const ctx=canvas.getContext('2d'),rect=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
  canvas.width=Math.max(300,Math.floor(rect.width*dpr));canvas.height=230*dpr;
  ctx.setTransform(dpr,0,0,dpr,0,0);
  const w=rect.width,hh=230,left=42,right=14,top=16,bottom=34,plotW=w-left-right,plotH=hh-top-bottom;
  ctx.clearRect(0,0,w,hh);
- const rows=(Array.isArray(window.rainData?.hourly_observations)?window.rainData.hourly_observations:[])
-  .filter(o=>o.city===city&&String(o.collection_date||o.date)===date)
-  .sort((a,b)=>String(a.collected_at||a.observed_at).localeCompare(String(b.collected_at||b.observed_at)));
- const byHour=new Map(rows.map(o=>[Number(o.collection_hour??o.hour),o]));
- const hours=Array.from({length:24},(_,i)=>i),values=hours.map(x=>byHour.get(x)?.rain_1h_mm??null);
- const max=Math.max(1,...values.filter(v=>v!==null).map(Number)),scale=Math.ceil(max);
+
+ // The endpoint is the current Beijing hour, rounded down (e.g. 02:55 -> 02:00).
+ const nowMs=Date.now()+8*3600000;
+ const endMs=Math.floor(nowMs/3600000)*3600000;
+ const startMs=endMs-23*3600000;
+ const observations=Array.isArray(window.rainData?.hourly_observations)?window.rainData.hourly_observations:[];
+ const byHour=new Map();
+ observations.filter(o=>o.city===city).forEach(o=>{
+  const stamp=o.collected_at||o.observed_at,key=beijingHourKey(stamp);
+  if(!key)return;
+  const old=byHour.get(key);
+  if(!old||Date.parse(stamp)>Date.parse(old.collected_at||old.observed_at))byHour.set(key,o);
+ });
+ const slots=Array.from({length:24},(_,i)=>{
+  const t=new Date(startMs+i*3600000),key=t.toISOString().slice(0,13);
+  return {time:t,key,obs:byHour.get(key)||null};
+ });
+ const values=slots.map(x=>x.obs?.rain_1h_mm===null||x.obs?.rain_1h_mm===undefined?null:Number(x.obs.rain_1h_mm));
+ const max=Math.max(1,...values.filter(v=>v!==null&&Number.isFinite(v))),scale=Math.ceil(max);
  ctx.strokeStyle='#e4eaf0';ctx.fillStyle='#718096';ctx.font='12px Arial';ctx.textAlign='right';
  for(let n=0;n<=4;n++){const y=top+plotH-n*plotH/4;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.fillText((scale*n/4).toFixed(1),left-8,y+4);}
  const slot=plotW/24,bars=[];
- hours.forEach((hour,i)=>{const v=values[i],x=left+i*slot+slot*.2,bw=slot*.6,bh=v===null?0:v/scale*plotH,y=top+plotH-bh;
-  if(v!==null){ctx.fillStyle='#4285bd';ctx.fillRect(x,y,bw,bh);}
-  bars.push({x:left+i*slot,y:top,w:slot,h:plotH,hour,value:v,obs:byHour.get(hour)});
-  if(i%2===0){ctx.fillStyle='#718096';ctx.textAlign='center';ctx.fillText(String(hour).padStart(2,'0'),left+i*slot+slot/2,hh-12);}
+ slots.forEach((item,i)=>{
+  const v=values[i],x=left+i*slot+slot*.2,bw=slot*.6,bh=v===null?0:v/scale*plotH,y=top+plotH-bh;
+  if(v!==null&&Number.isFinite(v)){ctx.fillStyle='#4285bd';ctx.fillRect(x,y,bw,bh);}
+  bars.push({x:left+i*slot,y:top,w:slot,h:plotH,hour:item.time.getUTCHours(),value:v,obs:item.obs,key:item.key});
+  // Two-hour ticks, plus always label the rightmost endpoint.
+  if(i%2===0||i===23){
+   ctx.fillStyle='#718096';ctx.textAlign=i===23?'right':'center';
+   const label=String(item.time.getUTCHours()).padStart(2,'0')+':00';
+   ctx.fillText(label,i===23?left+(i+1)*slot:left+i*slot+slot/2,hh-12);
+  }
  });
  ctx.fillStyle='#718096';ctx.textAlign='left';ctx.fillText('mm',5,12);
- canvas.onmousemove=e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,b=bars.find(z=>x>=z.x&&x<z.x+z.w&&y>=top&&y<=top+plotH);
+ canvas.onmousemove=e=>{
+  const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,b=bars.find(z=>x>=z.x&&x<z.x+z.w&&y>=top&&y<=top+plotH);
   if(!b){tip.style.display='none';return;}
   const stamp=b.obs?.observed_at||'该小时无采集记录';
-  tip.textContent=String(b.hour).padStart(2,'0')+':00 · '+(b.value===null?'缺测':Number(b.value).toFixed(1)+' mm')+' · '+stamp;
+  tip.textContent=b.key.slice(0,10)+' '+String(b.hour).padStart(2,'0')+':00 · '+(b.value===null?'缺测':b.value.toFixed(1)+' mm')+' · '+stamp;
   tip.style.display='block';tip.style.left=Math.min(w-245,Math.max(0,x+10))+'px';tip.style.top=Math.max(0,y-34)+'px';
  };
  canvas.onmouseleave=()=>tip.style.display='none';
- $('chartNote').textContent=rows.length+' 条实况观测；柱高为接口返回的1小时降水字段。它是每小时采集时的观测值，不等同于网页图表每个小时柱的历史归档，需与原网页同一时刻逐项核验。';
+ const known=values.filter(v=>v!==null&&Number.isFinite(v)).length;
+ $('hourChartWindow').textContent='最近24小时：'+slots[0].key.slice(0,10)+' '+slots[0].key.slice(11,13)+':00 — '+slots[23].key.slice(11,13)+':00（北京时间）';
+ $('chartNote').textContent='最近24小时有效小时数：'+known+'/24；横坐标终点为当前北京时间所在整点；缺测小时留空，不补零。';
 }
 
 function beijingHourKey(value){
