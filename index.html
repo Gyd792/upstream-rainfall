@@ -43,10 +43,10 @@ main{padding:20px clamp(12px,2.5vw,32px) 36px;max-width:1800px;margin:auto}
       <label class="field">记录方式
         <select id="recordMode">
           <option value="hourly">逐小时记录</option>
-          <option value="summary">早间 / 晚间统计</option>
+          <option value="summary" selected>早间 / 晚间统计</option>
         </select>
       </label>
-      <label class="field" id="periodField" style="display:none">统计时段
+      <label class="field" id="periodField">统计时段
         <select id="periodSelect">
           <option value="morning">早间（前一日21:00—当日07:00）</option>
           <option value="evening">晚间（当日08:00—20:00）</option>
@@ -196,20 +196,35 @@ function latestHourlyRows(from='',to=''){
  }
  return result;
 }
+function beijingTodayString(){
+ return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+}
 function render(){
  const mode=$('recordMode').value;
  const from=beijingInputKey($('dateFrom').value),to=beijingInputKey($('dateTo').value);
  if(mode==='summary'){
-  const date=$('dateFrom').value.slice(0,10);
-  const period=$('periodSelect').value;
-  $('tableTitle').textContent=period==='morning'?'早间降雨量统计记录表':'晚间降雨量统计记录表';
-  const row=allRecords.find(r=>r.date===date&&r.period===period);
-  const values=row?.values;
-  const complete=Array.isArray(values)&&values.length===16;
-  $('recordCount').textContent=row?(period==='morning'?'早间统计':'晚间统计')+' · '+date:'0 条';
-  if(!row){$('tableBody').innerHTML='<tr><td class="empty" colspan="17">该日期尚无正式'+(period==='morning'?'早间':'晚间')+'统计记录。时段数据未完整时保持空白。</td></tr>';return;}
-  const cells=cities.map((city,i)=>makeCell(complete?values[i]:null,'正式统计值；日期：'+date+'；时段：'+period));
-  $('tableBody').innerHTML='<tr><td>'+esc(date)+'<br><span class="pill">'+(period==='morning'?'前一日21:00—当日07:00':'当日08:00—20:00')+'</span></td>'+cells.join('')+'</tr>';
+  $('tableTitle').textContent='最近24小时早间、晚间降雨量统计记录表';
+  const now=Date.now()+8*3600000,windowStart=now-24*3600000;
+  const periodTime=r=>{
+   const d=r.date||'';
+   const hour=r.period==='morning'?7:20,minute=r.period==='morning'?40:40;
+   return Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10),hour,minute);
+  };
+  const recent=allRecords.filter(r=>['morning','evening'].includes(r.period)&&r.date)
+   .filter(r=>periodTime(r)>=windowStart&&periodTime(r)<=now)
+   .sort((x,y)=>periodTime(x)-periodTime(y));
+  $('recordCount').textContent=recent.length+' 条统计记录（最近24小时）';
+  if(!recent.length){
+   const date=beijingTodayString();
+   $('tableBody').innerHTML='<tr><td class="empty" colspan="17">最近24小时暂无已生成的早间或晚间正式统计记录。统计时段数据完整后会自动显示；不完整数据保持空白。</td></tr>';
+   return;
+  }
+  $('tableBody').innerHTML=recent.map(row=>{
+   const vals=Array.isArray(row.values)?row.values:[];
+   const cells=cities.map((city,i)=>makeCell(vals.length===16?vals[i]:null,'正式统计值；日期：'+row.date+'；时段：'+row.period));
+   const periodLabel=row.period==='morning'?'早间（前一日21:00—当日07:00）':'晚间（当日08:00—20:00）';
+   return '<tr><td>'+esc(row.date)+'<br><span class="pill">'+periodLabel+'</span></td>'+cells.join('')+'</tr>';
+  }).join('');
   return;
  }
  $('tableTitle').textContent='指定时间段逐小时降雨量记录表';
@@ -225,6 +240,7 @@ function render(){
   return '<tr><td>'+esc(key.slice(0,10))+'<br><span class="pill">'+esc(key.slice(11,13))+':00</span></td>'+cells.join('')+'</tr>';
  }).join('');
 }
+
 function updateQueryMode(){
  const summary=$('recordMode').value==='summary';
  $('periodField').style.display=summary?'':'none';
@@ -420,6 +436,14 @@ async function loadRainData({silent=false}={}){
   window.rainData=data;
   renderMissingReport(data);
   allRecords=Array.isArray(data.records)?data.records:[];
+  if(!window.initialSummaryViewSet){
+   $('recordMode').value='summary';
+   $('periodSelect').value='morning';
+   $('dateFrom').type='date';
+   $('dateFrom').value=beijingTodayString();
+   updateQueryMode();
+   window.initialSummaryViewSet=true;
+  }
   const observations=Array.isArray(data.hourly_observations)?data.hourly_observations:[];
   $('lastUpdate').textContent='数据更新时间：'+(data.updated_at||'暂无');
   $('queryStatus').textContent='已读取 '+observations.length+' 条逐小时快照；最近采集 '+(data.last_collection?.checked_at||'未知')+'；成功 '+(data.last_collection?.success_count??'—')+'/'+(data.last_collection?.expected_count??16);
