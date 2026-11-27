@@ -106,7 +106,7 @@
     }
   ],
   "note": "空值表示未取得完整且可核实的实测数据，不代表0毫米；缺测小时不会补零。自动采集每5分钟重试，同一地区同一北京时间小时仅保留一条记录。",
-  "updated_at": "2026-11-28T02:04+08:00",
+  "updated_at": "2026-11-28T02:26+08:00",
   "regions": [
     {
       "name": "曲靖地区",
@@ -5845,23 +5845,6 @@
       "status": "ok"
     },
     {
-      "city": "峨山",
-      "code": "101290708",
-      "observed_at": "2026-11-28T01:45+08:00",
-      "date": "2026-11-28",
-      "hour": 1,
-      "collected_at": "2026-11-28T02:02+08:00",
-      "collection_date": "2026-11-28",
-      "collection_hour": 2,
-      "rain_1h_mm": 0.0,
-      "rain_24h_mm": 0.0,
-      "source": "China Weather public observation endpoint",
-      "source_url": "https://d1.weather.com.cn/sk_2d/101290708.html",
-      "field_1h": "rain",
-      "field_24h": "rain24h",
-      "status": "ok"
-    },
-    {
       "city": "建水",
       "code": "101290303",
       "observed_at": "2026-11-28T01:45+08:00",
@@ -6081,10 +6064,27 @@
       "field_1h": "rain",
       "field_24h": "rain24h",
       "status": "ok"
+    },
+    {
+      "city": "峨山",
+      "code": "101290708",
+      "observed_at": "2026-11-28T02:15+08:00",
+      "date": "2026-11-28",
+      "hour": 2,
+      "collected_at": "2026-11-28T02:26+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 2,
+      "rain_1h_mm": 0.1,
+      "rain_24h_mm": 0.1,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290708.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
     }
   ],
   "last_collection": {
-    "checked_at": "2026-11-28T02:04+08:00",
+    "checked_at": "2026-11-28T02:26+08:00",
     "success_count": 16,
     "expected_count": 16,
     "failures": [],
