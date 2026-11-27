@@ -297,7 +297,7 @@ function drawRolling24Chart(){
 function exportCsv(){
  const from=beijingInputKey($('dateFrom').value),to=beijingInputKey($('dateTo').value);
  if(from&&to&&from>to){$('queryStatus').textContent='开始时间不能晚于结束时间';return;}
- const rows=latestHourlyRows().filter(([key])=>(!from||key>=from)&&(!to||key<=to));
+ const rows=latestHourlyRows(from,to);
  const lines=[['观测时间（北京时间）',...cities]];
  rows.forEach(([key,byCity])=>lines.push([key.replace('T',' ')+':00',...cities.map(c=>byCity[c]?.rain_1h_mm??'')]));
  const csv='\ufeff'+lines.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
