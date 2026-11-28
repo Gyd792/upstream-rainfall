@@ -144,17 +144,19 @@ let dataIndex={byHour:new Map(),byCity:new Map(),summaryRows:[]};
 function buildDataIndex(data){
  const byHour=new Map(),byCity=new Map(),observations=Array.isArray(data?.hourly_observations)?data.hourly_observations:[];
  for(const o of observations){
-  const stamp=o.collected_at||o.observed_at,ms=Date.parse(stamp),key=beijingHourKey(stamp);
+  // Use the actual observation time for the hourly row; collection time is only a tie-breaker.
+  const stamp=o.observed_at||o.collected_at,ms=Date.parse(stamp),key=beijingHourKey(stamp);
+  const collectedMs=Date.parse(o.collected_at||o.observed_at)||ms;
   if(!key||!Number.isFinite(ms))continue;
   let cityMap=byCity.get(o.city);
   if(!cityMap){cityMap={byHour:new Map(),latest:null};byCity.set(o.city,cityMap);}
   const prev=cityMap.byHour.get(key);
-  if(!prev||ms>Date.parse(prev.collected_at||prev.observed_at))cityMap.byHour.set(key,o);
-  if(!cityMap.latest||ms>Date.parse(cityMap.latest.collected_at||cityMap.latest.observed_at))cityMap.latest=o;
+  if(!prev||collectedMs>(Date.parse(prev.collected_at||prev.observed_at)||Date.parse(prev.observed_at)||0))cityMap.byHour.set(key,o);
+  if(!cityMap.latest||ms>Date.parse(cityMap.latest.observed_at||cityMap.latest.collected_at))cityMap.latest=o;
   let hourMap=byHour.get(key);
   if(!hourMap){hourMap={};byHour.set(key,hourMap);}
   const old=hourMap[o.city];
-  if(!old||ms>Date.parse(old.collected_at||old.observed_at))hourMap[o.city]=o;
+  if(!old||collectedMs>(Date.parse(old.collected_at||old.observed_at)||Date.parse(old.observed_at)||0))hourMap[o.city]=o;
  }
  const summaryRows=(Array.isArray(data?.records)?data.records:[])
   .filter(r=>['morning','evening'].includes(r.period)&&r.date)
