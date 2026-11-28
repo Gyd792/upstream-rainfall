@@ -304,8 +304,6 @@ def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any
         candidate_values.extend(extract_js_values(
             page, ("observe24h", "observe24h_data", "observe24hData", "observe24hDataJson")
         ))
-        for obj in extract_assigned_json_objects(page):
-            candidate_values.append(obj)
 
     # Inline observe24h_data is the normal China Weather page path. Resolve
     # it first; only request external scripts when the HTML did not contain
@@ -327,8 +325,6 @@ def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any
                 candidate_values.extend(extract_js_values(
                     script_text, ("observe24h", "observe24h_data", "observe24hData", "observe24hDataJson")
                 ))
-                for obj in extract_assigned_json_objects(script_text):
-                    candidate_values.append(obj)
                 for value in candidate_values:
                     observe = find_observe24h(value)
                     if observe is not None:
