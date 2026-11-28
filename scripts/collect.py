@@ -349,28 +349,38 @@ def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any
             "; pages=" + str(len(pages))
         )
 
+    # China Weather's od0 is the chart date (YYYYMMDD), not a timestamp.
+    # Its od2 array may be newest-first and can include one null boundary row.
     anchor_raw = str(observe.get("od0", "")).strip()
-    anchor = None
-    for fmt in ("%Y%m%d%H%M", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S"):
+    chart_date = None
+    for fmt in ("%Y%m%d", "%Y-%m-%d", "%Y/%m/%d", "%Y%m%d%H%M"):
         try:
-            anchor = datetime.strptime(anchor_raw[:19], fmt).replace(tzinfo=BEIJING)
+            chart_date = datetime.strptime(anchor_raw[:len(datetime.now().strftime(fmt))], fmt).date()
             break
         except ValueError:
             continue
+    if chart_date is None:
+        raise ValueError(f"chart date od0 is missing or invalid: {anchor_raw!r}")
 
     points = observe.get("od2")
-    if not isinstance(points, list) or len(points) != 24:
-        raise ValueError(
-            f"24h chart series found but has invalid point count: "
-            f"{len(points) if isinstance(points, list) else 'non-list'}"
-        )
+    if not isinstance(points, list):
+        raise ValueError("24h chart od2 is not a list")
+
+    # The chart payload can contain a sentinel row with od22 == "null".
+    # Exclude only that explicitly invalid row; never turn it into 0 mm.
+    points = [
+        point for point in points
+        if not (isinstance(point, dict) and str(point.get("od22", "")).strip().lower() == "null")
+    ]
+    if len(points) not in (24, 25):
+        raise ValueError(f"24h chart has invalid usable point count: {len(points)}")
 
     hour_values: list[int] = []
     for index, point in enumerate(points):
         if not isinstance(point, dict):
             raise ValueError(f"invalid hourly point at index {index}")
         raw_hour = str(point.get("od21", point.get("time", ""))).strip()
-        match = re.search(r"(?:^|\s)(\d{1,2})(?::\d{2})?$", raw_hour)
+        match = re.search(r"(?:^|\\s)(\\d{1,2})(?::\\d{2})?$", raw_hour)
         if not match:
             raise ValueError(f"invalid hourly label at index {index}: {raw_hour!r}")
         hour_value = int(match.group(1))
@@ -378,31 +388,33 @@ def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any
             raise ValueError(f"hour out of range at index {index}: {raw_hour!r}")
         hour_values.append(hour_value)
 
-    ascending = all((hour_values[i] + 1) % 24 == hour_values[i + 1] for i in range(23))
-    descending = all((hour_values[i] - 1) % 24 == hour_values[i + 1] for i in range(23))
-    if len(set(hour_values)) != 24 or not (ascending or descending):
-        raise ValueError("chart hour labels are not a unique continuous 24-hour sequence")
+    ascending = all((hour_values[i] + 1) % 24 == hour_values[i + 1] for i in range(len(hour_values) - 1))
+    descending = all((hour_values[i] - 1) % 24 == hour_values[i + 1] for i in range(len(hour_values) - 1))
+    if not (ascending or descending):
+        raise ValueError("chart hour labels are not a continuous hourly sequence")
 
-    if anchor is None:
-        # If the data points carry full dates/timestamps, use those. Never infer
-        # a date from collection time for hour-only values.
-        first_full = next((str(p.get("od21") or p.get("time") or "") for p in points
-                           if re.search(r"\d{4}[-/]\d{1,2}[-/]\d{1,2}", str(p.get("od21") or p.get("time") or ""))), None)
-        if first_full is None:
-            raise ValueError(f"chart snapshot anchor od0 is missing or invalid: {anchor_raw!r}")
-        anchor = datetime.fromisoformat(first_full.replace("/", "-")).replace(tzinfo=BEIJING)
-        anchor = anchor.replace(minute=0, second=0, microsecond=0)
+    # Normalize to oldest -> newest. Some page builds serialize newest first.
+    if descending:
+        points.reverse()
+        hour_values.reverse()
 
-    anchor = anchor.replace(minute=0, second=0, microsecond=0)
-    anchor_positions = [i for i, hour in enumerate(hour_values) if hour == anchor.hour]
-    if len(anchor_positions) != 1:
-        raise ValueError("chart snapshot hour cannot be matched uniquely to hourly labels")
-    anchor_index = anchor_positions[0]
+    # 25 ticks describe 24 hourly intervals; discard only the oldest
+    # boundary sample so the retained data covers the latest 24 hours.
+    if len(points) == 25:
+        points = points[1:]
+        hour_values = hour_values[1:]
 
+    if len(set(hour_values)) != 24:
+        raise ValueError("chart does not contain 24 unique hourly observations")
+
+    # od0 identifies the current chart date. Hours later than the current
+    # Beijing hour belong to the previous calendar day in a rolling window.
+    current_hour = now.astimezone(BEIJING).hour
     result = []
     for index, point in enumerate(points):
-        offset = index - anchor_index if ascending else anchor_index - index
-        stamp = anchor + timedelta(hours=offset)
+        hour_value = hour_values[index]
+        point_date = chart_date - timedelta(days=1) if hour_value > current_hour else chart_date
+        stamp = datetime.combine(point_date, datetime.min.time(), tzinfo=BEIJING).replace(hour=hour_value)
         raw_rain = point.get("od26", point.get("rain", point.get("precip")))
         rain_value = as_mm(raw_rain)
         result.append({
@@ -418,7 +430,7 @@ def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any
             "source_url": next((url for url, _ in pages if url.endswith(f"/{code}.shtml")), page_urls[0]),
             "field_1h": "observe24h_data.od.od2[].od26",
             "field_24h": None,
-            "chart_snapshot_at": anchor.isoformat(timespec="minutes"),
+            "chart_snapshot_at": now.isoformat(timespec="minutes"),
             "backfilled": True,
             "status": "ok" if rain_value is not None else "missing_in_source",
         })
