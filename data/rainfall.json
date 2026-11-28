@@ -106,7 +106,7 @@
     }
   ],
   "note": "每次采集均重新检查当前实况，并按真实观测时间归入北京时间小时；同一小时取得更新的真实观测值时更新该小时记录。最近24小时图表仅在成功取得并验证逐小时实测值时补齐缺测；图表解析失败或源数据缺失时保留空值，不使用预测值、不复制相邻小时数据。",
-  "updated_at": "2026-11-28T18:44+08:00",
+  "updated_at": "2026-11-28T19:01+08:00",
   "regions": [
     {
       "name": "曲靖地区",
@@ -9908,12 +9908,12 @@
     {
       "city": "华宁",
       "code": "101290705",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -9927,12 +9927,12 @@
     {
       "city": "宜良",
       "code": "101290106",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -9946,12 +9946,12 @@
     {
       "city": "峨山",
       "code": "101290708",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -9965,12 +9965,12 @@
     {
       "city": "建水",
       "code": "101290303",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -9984,12 +9984,12 @@
     {
       "city": "开远",
       "code": "101290307",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10003,12 +10003,12 @@
     {
       "city": "弥勒",
       "code": "101290304",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10022,12 +10022,12 @@
     {
       "city": "曲靖",
       "code": "101290401",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10041,12 +10041,12 @@
     {
       "city": "江川",
       "code": "101290703",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10060,12 +10060,12 @@
     {
       "city": "泸西",
       "code": "101290311",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10079,12 +10079,12 @@
     {
       "city": "澄江",
       "code": "101290702",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10098,12 +10098,12 @@
     {
       "city": "玉溪",
       "code": "101290701",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10117,12 +10117,12 @@
     {
       "city": "石屏",
       "code": "101290302",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10136,12 +10136,12 @@
     {
       "city": "石林",
       "code": "101290107",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10155,12 +10155,12 @@
     {
       "city": "蒙自",
       "code": "101290309",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10174,12 +10174,12 @@
     {
       "city": "通海",
       "code": "101290704",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10193,12 +10193,12 @@
     {
       "city": "陆良",
       "code": "101290403",
-      "observed_at": "2026-11-28T18:30+08:00",
+      "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T18:44+08:00",
+      "collected_at": "2026-11-28T19:01+08:00",
       "collection_date": "2026-11-28",
-      "collection_hour": 18,
+      "collection_hour": 19,
       "observation_date": "2026-11-28",
       "observation_hour": 18,
       "rain_1h_mm": 0.0,
@@ -10211,8 +10211,8 @@
     }
   ],
   "last_collection": {
-    "checked_at": "2026-11-28T18:44+08:00",
-    "health_bucket": "2026-11-28T18:30+08:00",
+    "checked_at": "2026-11-28T19:01+08:00",
+    "health_bucket": "2026-11-28T19:00+08:00",
     "success_count": 16,
     "expected_count": 16,
     "failures": [],
@@ -10396,194 +10396,210 @@
   ],
   "missing_hours_report": {
     "timezone": "Asia/Shanghai (UTC+08:00)",
-    "window_start": "2026-11-27T19",
-    "window_end": "2026-11-28T18",
-    "generated_at": "2026-11-28T18:00+08:00",
-    "missing_hour_count": 49,
-    "covered_hour_count": 335,
+    "window_start": "2026-11-27T20",
+    "window_end": "2026-11-28T19",
+    "generated_at": "2026-11-28T19:00+08:00",
+    "missing_hour_count": 65,
+    "covered_hour_count": 319,
     "expected_hour_count": 384,
     "cities": [
       {
         "city": "曲靖",
         "code": "101290401",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "陆良",
         "code": "101290403",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "宜良",
         "code": "101290106",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "石林",
         "code": "101290107",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "澄江",
         "code": "101290702",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "江川",
         "code": "101290703",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "玉溪",
         "code": "101290701",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "峨山",
         "code": "101290708",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T01",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "通海",
         "code": "101290704",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "华宁",
         "code": "101290705",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "建水",
         "code": "101290303",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "蒙自",
         "code": "101290309",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "石屏",
         "code": "101290302",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "开远",
         "code": "101290307",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "弥勒",
         "code": "101290304",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       },
       {
         "city": "泸西",
         "code": "101290311",
-        "coverage": 21,
+        "coverage": 20,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T22",
           "2026-11-28T05",
-          "2026-11-28T10"
+          "2026-11-28T10",
+          "2026-11-28T19"
         ]
       }
     ]
   },
   "backfill_report": {
-    "checked_at": "2026-11-28T18:44+08:00",
+    "checked_at": "2026-11-28T19:01+08:00",
     "mode": "rolling_24h_chart_backfill",
     "source": "China Weather city page observe24h_data.od.od2[].od26",
     "attempted_cities": 16,
@@ -10593,82 +10609,82 @@
       {
         "city": "曲靖",
         "code": "101290401",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "陆良",
         "code": "101290403",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "宜良",
         "code": "101290106",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "石林",
         "code": "101290107",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "澄江",
         "code": "101290702",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "江川",
         "code": "101290703",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "玉溪",
         "code": "101290701",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "峨山",
         "code": "101290708",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "通海",
         "code": "101290704",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "华宁",
         "code": "101290705",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "建水",
         "code": "101290303",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "蒙自",
         "code": "101290309",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "石屏",
         "code": "101290302",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "开远",
         "code": "101290307",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "弥勒",
         "code": "101290304",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       },
       {
         "city": "泸西",
         "code": "101290311",
-        "error": "name 'extract_assigned_json_objects' is not defined"
+        "error": "24h chart series found but has invalid point count: 25"
       }
     ],
     "window_hours": 24,
