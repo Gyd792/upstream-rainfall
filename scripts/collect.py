@@ -409,11 +409,11 @@ def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any
 
     # od0 identifies the current chart date. Hours later than the current
     # Beijing hour belong to the previous calendar day in a rolling window.
-    current_hour = now.astimezone(BEIJING).hour
+    latest_chart_hour = hour_values[-1]
     result = []
     for index, point in enumerate(points):
         hour_value = hour_values[index]
-        point_date = chart_date - timedelta(days=1) if hour_value > current_hour else chart_date
+        point_date = chart_date - timedelta(days=1) if hour_value > latest_chart_hour else chart_date
         stamp = datetime.combine(point_date, datetime.min.time(), tzinfo=BEIJING).replace(hour=hour_value)
         raw_rain = point.get("od26", point.get("rain", point.get("precip")))
         rain_value = as_mm(raw_rain)
