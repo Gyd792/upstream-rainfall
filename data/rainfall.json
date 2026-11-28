@@ -106,7 +106,7 @@
     }
   ],
   "note": "空值表示未取得可核实的实测数据，不代表0毫米；不使用预测或再分析数据填补实测缺测。每5分钟尝试采集当前实况；历史接口不可用时，过去小时缺测会继续标记，不伪造回填。",
-  "updated_at": "2026-11-28T17:03+08:00",
+  "updated_at": "2026-11-28T17:11+08:00",
   "regions": [
     {
       "name": "曲靖地区",
@@ -10022,5 +10022,15 @@
         ]
       }
     ]
+  },
+  "backfill_report": {
+    "checked_at": "2026-11-28T17:11+08:00",
+    "mode": "late_live_observation_retry",
+    "source": "China Weather current observation endpoint",
+    "attempted_cities": 16,
+    "filled_city_hours": 0,
+    "still_unfilled_attempts": 16,
+    "historical_api": "not_configured",
+    "limitation": "Current endpoint has no verified arbitrary historical-hour query; older gaps remain missing until a station-matched historical observation source is configured."
   }
 }
