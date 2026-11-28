@@ -105,8 +105,8 @@
       "updated_at": "2026-11-27T08:32+08:00"
     }
   ],
-  "note": "空值表示未取得完整且可核实的实测数据，不代表0毫米；缺测小时不会补零。自动采集每5分钟重试，同一地区同一北京时间小时仅保留一条记录。",
-  "updated_at": "2026-11-28T16:44+08:00",
+  "note": "空值表示未取得可核实的实测数据，不代表0毫米；不使用预测或再分析数据填补实测缺测。每5分钟尝试采集当前实况；历史接口不可用时，过去小时缺测会继续标记，不伪造回填。",
+  "updated_at": "2026-11-28T17:03+08:00",
   "regions": [
     {
       "name": "曲靖地区",
@@ -9620,12 +9620,14 @@
     }
   ],
   "last_collection": {
-    "checked_at": "2026-11-28T16:44+08:00",
+    "checked_at": "2026-11-28T17:03+08:00",
+    "health_bucket": "2026-11-28T17:00+08:00",
     "success_count": 16,
     "expected_count": 16,
     "failures": [],
-    "history_policy": "one verified sample per city and Beijing clock hour; five-minute retries",
-    "source": "https://d1.weather.com.cn/sk_2d/{area_code}.html"
+    "history_policy": "one observation timestamp per city and Beijing hour; retry current feed every scheduled run",
+    "source": "https://d1.weather.com.cn/sk_2d/{area_code}.html",
+    "historical_backfill": "not_available_from_live_endpoint"
   },
   "summary_history": [
     {
@@ -9803,200 +9805,220 @@
   ],
   "missing_hours_report": {
     "timezone": "Asia/Shanghai (UTC+08:00)",
-    "window_start": "2026-11-27T17",
-    "window_end": "2026-11-28T16",
-    "generated_at": "2026-11-28T16:00+08:00",
+    "window_start": "2026-11-27T18",
+    "window_end": "2026-11-28T17",
+    "generated_at": "2026-11-28T17:00+08:00",
+    "missing_hour_count": 81,
+    "covered_hour_count": 303,
+    "expected_hour_count": 384,
     "cities": [
       {
         "city": "曲靖",
         "code": "101290401",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "陆良",
         "code": "101290403",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "宜良",
         "code": "101290106",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "石林",
         "code": "101290107",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "澄江",
         "code": "101290702",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "江川",
         "code": "101290703",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "玉溪",
         "code": "101290701",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "峨山",
         "code": "101290708",
-        "coverage": 20,
+        "coverage": 18,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
           "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "通海",
         "code": "101290704",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "华宁",
         "code": "101290705",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "建水",
         "code": "101290303",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "蒙自",
         "code": "101290309",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "石屏",
         "code": "101290302",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "开远",
         "code": "101290307",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "弥勒",
         "code": "101290304",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       },
       {
         "city": "泸西",
         "code": "101290311",
-        "coverage": 20,
+        "coverage": 19,
         "expected": 24,
         "missing_hours": [
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01",
-          "2026-11-28T09"
+          "2026-11-28T05",
+          "2026-11-28T10",
+          "2026-11-28T17"
         ]
       }
     ]
