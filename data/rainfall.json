@@ -106,7 +106,7 @@
     }
   ],
   "note": "每次采集均重新检查当前实况，并按真实观测时间归入北京时间小时；同一小时取得更新的真实观测值时更新该小时记录。最近24小时图表仅在成功取得并验证逐小时实测值时补齐缺测；图表解析失败或源数据缺失时保留空值，不使用预测值、不复制相邻小时数据。",
-  "updated_at": "2026-11-28T20:28:00+08:00",
+  "updated_at": "2026-11-28T21:37:00+08:00",
   "regions": [
     {
       "name": "曲靖地区",
@@ -10816,11 +10816,315 @@
       "field_1h": "rain",
       "field_24h": "rain24h",
       "status": "ok"
+    },
+    {
+      "city": "宜良",
+      "code": "101290106",
+      "observed_at": "2026-11-28T21:20+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290106.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "蒙自",
+      "code": "101290309",
+      "observed_at": "2026-11-28T21:20+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290309.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "华宁",
+      "code": "101290705",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290705.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "峨山",
+      "code": "101290708",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290708.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "建水",
+      "code": "101290303",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290303.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "开远",
+      "code": "101290307",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290307.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "弥勒",
+      "code": "101290304",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290304.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "曲靖",
+      "code": "101290401",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290401.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "江川",
+      "code": "101290703",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290703.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "泸西",
+      "code": "101290311",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290311.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "澄江",
+      "code": "101290702",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290702.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "玉溪",
+      "code": "101290701",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290701.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "石屏",
+      "code": "101290302",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290302.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "石林",
+      "code": "101290107",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290107.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "通海",
+      "code": "101290704",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290704.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "陆良",
+      "code": "101290403",
+      "observed_at": "2026-11-28T21:25+08:00",
+      "date": "2026-11-28",
+      "hour": 21,
+      "collected_at": "2026-11-28T21:37+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 21,
+      "observation_date": "2026-11-28",
+      "observation_hour": 21,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290403.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
     }
   ],
   "last_collection": {
-    "checked_at": "2026-11-28T20:28+08:00",
-    "health_bucket": "2026-11-28T20:15+08:00",
+    "checked_at": "2026-11-28T21:37+08:00",
+    "health_bucket": "2026-11-28T21:30+08:00",
     "success_count": 16,
     "expected_count": 16,
     "failures": [],
@@ -11004,9 +11308,9 @@
   ],
   "missing_hours_report": {
     "timezone": "Asia/Shanghai (UTC+08:00)",
-    "window_start": "2026-11-27T21",
-    "window_end": "2026-11-28T20",
-    "generated_at": "2026-11-28T20:00+08:00",
+    "window_start": "2026-11-27T22",
+    "window_end": "2026-11-28T21",
+    "generated_at": "2026-11-28T21:00+08:00",
     "missing_hour_count": 49,
     "covered_hour_count": 335,
     "expected_hour_count": 384,
@@ -11191,7 +11495,7 @@
     ]
   },
   "backfill_report": {
-    "checked_at": "2026-11-28T20:28+08:00",
+    "checked_at": "2026-11-28T21:37+08:00",
     "mode": "rolling_24h_chart_backfill",
     "source": "China Weather city page observe24h_data.od.od2[].od26",
     "attempted_cities": 16,
@@ -11202,82 +11506,82 @@
       {
         "city": "曲靖",
         "code": "101290401",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "陆良",
         "code": "101290403",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "宜良",
         "code": "101290106",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "石林",
         "code": "101290107",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "澄江",
         "code": "101290702",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "江川",
         "code": "101290703",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "玉溪",
         "code": "101290701",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "峨山",
         "code": "101290708",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "通海",
         "code": "101290704",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "华宁",
         "code": "101290705",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "建水",
         "code": "101290303",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "蒙自",
         "code": "101290309",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "石屏",
         "code": "101290302",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "开远",
         "code": "101290307",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "弥勒",
         "code": "101290304",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       },
       {
         "city": "泸西",
         "code": "101290311",
-        "error": "invalid hourly label at index 0: '19'"
+        "error": "invalid hourly label at index 0: '21'"
       }
     ],
     "window_hours": 24,
