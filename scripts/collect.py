@@ -384,6 +384,45 @@ def main() -> int:
             print(f"ERROR {name} ({code}): {exc}")
         time.sleep(0.25)
 
+    # Late-arriving live observations: recheck recent gaps once after the
+    # normal collection pass. The China Weather endpoint is a CURRENT snapshot,
+    # not a historical query API, so accept a value only when its own timestamp
+    # exactly matches a missing city-hour in the last two hourly slots.
+    precheck = build_missing_report(data, now)
+    recent_keys = set()
+    for offset in (0, 1):
+        slot = (now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=offset))
+        recent_keys.add(slot.strftime("%Y-%m-%dT%H"))
+    gap_by_city = {
+        row["city"]: set(row["missing_hours"]).intersection(recent_keys)
+        for row in precheck["cities"]
+    }
+    backfill_attempted = 0
+    backfill_filled = 0
+    backfill_pending = 0
+    for name, code in CITIES:
+        target_gaps = gap_by_city.get(name, set())
+        if not target_gaps:
+            continue
+        backfill_attempted += 1
+        try:
+            candidate = fetch_city_with_retry(name, code, now, attempts=2)
+            candidate_key = "{}T{:02d}".format(
+                candidate["observation_date"], int(candidate["observation_hour"]))
+            if candidate_key in target_gaps and candidate.get("rain_1h_mm") is not None:
+                observations.append(candidate)
+                backfill_filled += 1
+                print("BACKFILL OK {}: {} = {} mm".format(
+                    name, candidate_key, candidate["rain_1h_mm"]))
+            else:
+                backfill_pending += 1
+                print("BACKFILL WAIT {}: live feed timestamp {} does not match recent gap {}".format(
+                    name, candidate_key, sorted(target_gaps)))
+        except Exception as exc:
+            backfill_pending += 1
+            print("BACKFILL ERROR {}: {}".format(name, exc))
+        time.sleep(0.2)
+
     unique = {}
     for item in sorted(observations, key=lambda x: x.get("collected_at") or x.get("observed_at", "")):
         key = (item.get("city"),
@@ -398,6 +437,16 @@ def main() -> int:
         unique.values(), key=lambda x: (x.get("collected_at") or x.get("observed_at", ""), x.get("city", "")))
     update_rollups(data, now)
     data["missing_hours_report"] = build_missing_report(data, now)
+    data["backfill_report"] = {
+        "checked_at": now.isoformat(timespec="minutes"),
+        "mode": "late_live_observation_retry",
+        "source": "China Weather current observation endpoint",
+        "attempted_cities": backfill_attempted,
+        "filled_city_hours": backfill_filled,
+        "still_unfilled_attempts": backfill_pending,
+        "historical_api": "not_configured",
+        "limitation": "Current endpoint has no verified arbitrary historical-hour query; older gaps remain missing until a station-matched historical observation source is configured."
+    }
     data["note"] = (
         "空值表示未取得可核实的实测数据，不代表0毫米；不使用预测或再分析数据填补实测缺测。"
         "每5分钟尝试采集当前实况；历史接口不可用时，过去小时缺测会继续标记，不伪造回填。"
