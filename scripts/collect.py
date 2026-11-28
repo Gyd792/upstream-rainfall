@@ -164,7 +164,7 @@ def parse_observation_time(data: dict[str, Any], now: datetime) -> datetime:
 def extract_assigned_json_objects(page: str) -> list[dict[str, Any]]:
     """Extract strict-JSON JavaScript assignment objects from the weather page."""
     found: list[dict[str, Any]] = []
-    for match in re.finditer(r"(?:var|let|const)\\s+[A-Za-z_$][\\w$]*\\s*=\\s*", page):
+    for match in re.finditer(r"(?:var|let|const)\s+[A-Za-z_$][\w$]*\s*=\s*", page):
         start = page.find("{", match.end())
         if start < 0 or start - match.end() > 8:
             continue
@@ -174,7 +174,7 @@ def extract_assigned_json_objects(page: str) -> list[dict[str, Any]]:
             if quote:
                 if escaped:
                     escaped = False
-                elif ch == "\\\\":
+                elif ch == "\\":
                     escaped = True
                 elif ch == quote:
                     quote = None
@@ -237,7 +237,7 @@ def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any
             break
     if observe is None:
         # Some page versions assign observe24h directly rather than nesting it.
-        direct = re.search(r"observe24h\\s*=\\s*", page)
+        direct = re.search(r"observe24h\s*=\s*", page)
         if direct:
             wrapped = page[direct.end():]
             for obj in extract_assigned_json_objects("var __wrapper = " + wrapped):
@@ -256,24 +256,40 @@ def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any
     if not isinstance(points, list) or len(points) != 24:
         raise ValueError(f"expected 24 hourly points, got {len(points) if isinstance(points, list) else 'non-list'}")
 
-    # The 24 bars represent the 24 completed one-hour intervals immediately
-    # preceding the snapshot time. od21 is the interval's starting hour.
-    first_hour = anchor.replace(minute=0, second=0, microsecond=0) - timedelta(hours=24)
-    result = []
+    # od0 is the chart's observation-time anchor. od21 carries each bar's
+    # hour label. Infer whether the 24-point sequence is ascending or descending
+    # from its labels, then anchor the uniquely matching hour to od0. This avoids
+    # assuming array order and correctly handles midnight rollover.
+    anchor = anchor.replace(minute=0, second=0, microsecond=0)
+    hour_values = []
     for index, point in enumerate(points):
         if not isinstance(point, dict):
             raise ValueError(f"invalid hourly point at index {index}")
-        stamp = first_hour + timedelta(hours=index)
-        hour_raw = str(point.get("od21", "")).strip()
-        try:
-            hour_value = int(hour_raw)
-        except ValueError as exc:
-            raise ValueError(f"invalid od21 hour at index {index}: {hour_raw!r}") from exc
-        if hour_value != stamp.hour:
-            raise ValueError(
-                f"hour sequence mismatch at index {index}: od21={hour_value}, expected={stamp.hour}; "
-                "refusing to backfill with uncertain timestamps"
-            )
+        raw_hour = str(point.get("od21", "")).strip()
+        match = re.search(r"(?:^|\\s)(\\d{1,2})(?::\\d{2})?$", raw_hour)
+        if not match:
+            raise ValueError(f"invalid od21 hour at index {index}: {raw_hour!r}")
+        hour_value = int(match.group(1))
+        if not 0 <= hour_value <= 23:
+            raise ValueError(f"od21 hour out of range at index {index}: {raw_hour!r}")
+        hour_values.append(hour_value)
+
+    if len(set(hour_values)) != 24:
+        raise ValueError("od21 does not contain 24 unique hourly labels")
+    ascending = all((hour_values[i] + 1) % 24 == hour_values[i + 1]
+                    for i in range(23))
+    descending = all((hour_values[i] - 1) % 24 == hour_values[i + 1]
+                     for i in range(23))
+    if not (ascending or descending):
+        raise ValueError("od21 labels are not a continuous 24-hour sequence")
+    anchor_positions = [i for i, hour in enumerate(hour_values) if hour == anchor.hour]
+    if len(anchor_positions) != 1:
+        raise ValueError("od0 anchor hour cannot be uniquely matched to od21 labels")
+    anchor_index = anchor_positions[0]
+    result = []
+    for index, point in enumerate(points):
+        offset = index - anchor_index if ascending else anchor_index - index
+        stamp = anchor + timedelta(hours=offset)
         rain_value = as_mm(point.get("od26"))
         result.append({
             "city": name, "code": code,
