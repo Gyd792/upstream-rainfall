@@ -735,37 +735,32 @@ def main() -> int:
             print(f"ERROR {name} ({code}): {exc}")
         time.sleep(0.25)
 
-    # Backfill from the same rolling 24-hour hourly chart shown on each
-    # city weather page. Every run reads the latest 24-hour snapshot and fills
-    # only missing city-hours; existing valid observations are never overwritten.
+    # Re-read the rolling 24-hour chart on every run. Missing hours are
+    # backfilled; if the source now provides a newer real value for an hour
+    # already stored, upsert_observation replaces it using observed_at and
+    # collected_at ordering. Null source points never erase valid values.
     chart_attempted = 0
     chart_filled = 0
+    chart_updated = 0
     chart_unavailable = 0
     chart_errors = []
-    existing_keys = {
-        (o.get("city"),
-         o.get("observation_date") or o.get("collection_date") or o.get("date"),
-         int(o.get("observation_hour", o.get("collection_hour", o.get("hour", -1)))))
-        for o in observations
-    }
     for name, code in CITIES:
         chart_attempted += 1
         try:
             chart_points = fetch_rolling_24h(name, code, now)
-            city_added = 0
+            city_changed = 0
             for point in chart_points:
-                key = observation_hour_key(point)
-                old = next((o for o in observations if observation_hour_key(o) == key), None)
-                if old is not None and old.get("rain_1h_mm") is not None:
-                    continue
                 if point.get("rain_1h_mm") is None:
                     chart_unavailable += 1
                     continue
                 action = upsert_observation(observations, point)
-                if action in ("inserted", "updated"):
+                if action == "inserted":
                     chart_filled += 1
-                    city_added += 1
-            print(f"CHART BACKFILL {name}: filled {city_added} missing hours from rolling 24h chart")
+                    city_changed += 1
+                elif action == "updated":
+                    chart_updated += 1
+                    city_changed += 1
+            print(f"CHART BACKFILL {name}: inserted {chart_filled} missing hours; updated {chart_updated} newer observations")
         except Exception as exc:
             chart_errors.append({"city": name, "code": code, "error": str(exc)})
             print(f"CHART BACKFILL ERROR {name}: {exc}")
@@ -789,10 +784,11 @@ def main() -> int:
         "source": "China Weather city page observe24h_data.od.od2[].od26",
         "attempted_cities": chart_attempted,
         "filled_city_hours": chart_filled,
+        "updated_city_hours": chart_updated,
         "source_missing_points": chart_unavailable,
         "failed_cities": chart_errors,
         "window_hours": 24,
-        "policy": "fill missing city-hours only from verified rolling 24-hour observed chart values; live feed rechecks every run and newer valid observed_at values replace earlier values in the same city-hour; never copy adjacent-hour values",
+        "policy": "every run rechecks the verified rolling 24-hour observed chart; fill missing city-hours and replace an existing city-hour only when a newer valid real observation/snapshot is available; null values never erase valid values; never copy adjacent-hour values",
     }
     data["note"] = (
         "每次采集均重新检查当前实况，并按真实观测时间归入北京时间小时；同一小时取得更新的真实观测值时更新该小时记录。"
