@@ -179,6 +179,8 @@ def fetch_city(name: str, code: str, now: datetime) -> dict[str, Any]:
         "date": observed_at.date().isoformat(), "hour": observed_at.hour,
         "collected_at": now.isoformat(timespec="minutes"),
         "collection_date": now.date().isoformat(), "collection_hour": now.hour,
+        "observation_date": observed_at.date().isoformat(),
+        "observation_hour": observed_at.hour,
         "rain_1h_mm": as_mm(rain1), "rain_24h_mm": as_mm(rain24),
         "source": "China Weather public observation endpoint",
         "source_url": BASE_URL.format(code=code),
@@ -211,19 +213,25 @@ def build_missing_report(data: dict[str, Any], now: datetime) -> dict[str, Any]:
         for item in observations:
             if item.get("city") != name or item.get("rain_1h_mm") is None:
                 continue
-            stamp = item.get("collected_at") or item.get("observed_at")
-            if not stamp:
-                continue
             try:
-                dt = datetime.fromisoformat(stamp).astimezone(BEIJING)
-                available.add(dt.strftime("%Y-%m-%dT%H"))
-            except (TypeError, ValueError):
+                if item.get("observation_date") is not None and item.get("observation_hour") is not None:
+                    key = "{}T{:02d}".format(item["observation_date"], int(item["observation_hour"]))
+                else:
+                    stamp = item.get("observed_at") or item.get("collected_at")
+                    dt = datetime.fromisoformat(stamp).astimezone(BEIJING)
+                    key = dt.strftime("%Y-%m-%dT%H")
+                available.add(key)
+            except (TypeError, ValueError, KeyError):
                 continue
         missing = [hour for hour in expected if hour not in available]
         rows.append({"city": name, "code": code, "coverage": 24-len(missing),
                      "expected": 24, "missing_hours": missing})
+    missing_count = sum(len(row["missing_hours"]) for row in rows)
     return {"timezone": "Asia/Shanghai (UTC+08:00)", "window_start": expected[0],
             "window_end": expected[-1], "generated_at": end.isoformat(timespec="minutes"),
+            "missing_hour_count": missing_count,
+            "covered_hour_count": 16 * 24 - missing_count,
+            "expected_hour_count": 16 * 24,
             "cities": rows}
 
 
@@ -243,8 +251,8 @@ def build_daily_record(date_str: str, city_index: int,
     selected = [o for o in obs if o.get("city") == city_name]
     by_date_hour: dict[tuple[str, int], float | None] = {}
     for item in selected:
-        sample_date = item.get("collection_date") or item["date"]
-        sample_hour = int(item.get("collection_hour", item["hour"]))
+        sample_date = item.get("observation_date") or item.get("collection_date") or item["date"]
+        sample_hour = int(item.get("observation_hour", item.get("collection_hour", item["hour"])))
         by_date_hour[(sample_date, sample_hour)] = item.get("rain_1h_mm")
 
     morning_hours = [(prev, 21), (prev, 22), (prev, 23)] + [
@@ -358,10 +366,11 @@ def main() -> int:
     for name, code in CITIES:
         try:
             observation = fetch_city_with_retry(name, code, now, attempts=3)
-            key = (name, observation["collection_date"], observation["collection_hour"])
+            key = (name, observation["observation_date"], observation["observation_hour"])
             old = next((o for o in observations
-                        if (o.get("city"), o.get("collection_date") or o.get("date"),
-                            int(o.get("collection_hour", o.get("hour", -1)))) == key), None)
+                        if (o.get("city"),
+                            o.get("observation_date") or o.get("collection_date") or o.get("date"),
+                            int(o.get("observation_hour", o.get("collection_hour", o.get("hour", -1))))) == key), None)
             if old is None:
                 observations.append(observation)
             elif (old.get("rain_1h_mm") != observation.get("rain_1h_mm")
@@ -377,8 +386,9 @@ def main() -> int:
 
     unique = {}
     for item in sorted(observations, key=lambda x: x.get("collected_at") or x.get("observed_at", "")):
-        key = (item.get("city"), item.get("collection_date") or item.get("date"),
-               int(item.get("collection_hour", item.get("hour", -1))))
+        key = (item.get("city"),
+               item.get("observation_date") or item.get("collection_date") or item.get("date"),
+               int(item.get("observation_hour", item.get("collection_hour", item.get("hour", -1)))))
         previous = unique.get(key)
         if previous is None or (previous.get("rain_1h_mm") is None and item.get("rain_1h_mm") is not None):
             unique[key] = item
@@ -388,21 +398,34 @@ def main() -> int:
         unique.values(), key=lambda x: (x.get("collected_at") or x.get("observed_at", ""), x.get("city", "")))
     update_rollups(data, now)
     data["missing_hours_report"] = build_missing_report(data, now)
-    data["note"] = "空值表示未取得完整且可核实的实测数据，不代表0毫米；缺测小时不会补零。自动采集每5分钟重试，同一地区同一北京时间小时仅保留一条记录。"
+    data["note"] = (
+        "空值表示未取得可核实的实测数据，不代表0毫米；不使用预测或再分析数据填补实测缺测。"
+        "每5分钟尝试采集当前实况；历史接口不可用时，过去小时缺测会继续标记，不伪造回填。"
+    )
+
+    # Scheduled workflows can be delayed. Persist health once per 15-minute bucket
+    # to avoid creating a Git commit on every five-minute poll.
+    health_bucket = now.replace(minute=(now.minute // 15) * 15, second=0, microsecond=0)
+    previous_health = data.get("last_collection", {})
+    previous_bucket = previous_health.get("health_bucket")
+    if previous_bucket != health_bucket.isoformat(timespec="minutes"):
+        data["last_collection"] = {
+            "checked_at": now.isoformat(timespec="minutes"),
+            "health_bucket": health_bucket.isoformat(timespec="minutes"),
+            "success_count": success, "expected_count": len(CITIES),
+            "failures": failures,
+            "history_policy": "one observation timestamp per city and Beijing hour; retry current feed every scheduled run",
+            "source": "https://d1.weather.com.cn/sk_2d/{area_code}.html",
+            "historical_backfill": "not_available_from_live_endpoint",
+        }
+
     after = json.dumps(data, ensure_ascii=False, sort_keys=True)
     if after != before:
         data["updated_at"] = now.isoformat(timespec="minutes")
-        data["last_collection"] = {
-            "checked_at": now.isoformat(timespec="minutes"),
-            "success_count": success, "expected_count": len(CITIES),
-            "failures": failures,
-            "history_policy": "one verified sample per city and Beijing clock hour; five-minute retries",
-            "source": "https://d1.weather.com.cn/sk_2d/{area_code}.html",
-        }
         DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"Saved updated rainfall data: {success}/{len(CITIES)} cities; failures={len(failures)}")
+        print(f"Saved rainfall data: {success}/{len(CITIES)} cities; missing hours={data['missing_hours_report']['missing_hour_count']}")
     else:
-        print(f"No new hourly values; latest attempt succeeded for {success}/{len(CITIES)} cities.")
+        print(f"No data changes; latest attempt succeeded for {success}/{len(CITIES)} cities.")
     return 0 if success > 0 else 1
 
 
