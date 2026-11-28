@@ -161,6 +161,140 @@ def parse_observation_time(data: dict[str, Any], now: datetime) -> datetime:
     raise ValueError(f"unrecognized observation timestamp: {raw}; date={date_raw or 'missing'}")
 
 
+def extract_assigned_json_objects(page: str) -> list[dict[str, Any]]:
+    """Extract strict-JSON JavaScript assignment objects from the weather page."""
+    found: list[dict[str, Any]] = []
+    for match in re.finditer(r"(?:var|let|const)\\s+[A-Za-z_$][\\w$]*\\s*=\\s*", page):
+        start = page.find("{", match.end())
+        if start < 0 or start - match.end() > 8:
+            continue
+        depth, quote, escaped, end = 0, None, False, None
+        for i in range(start, len(page)):
+            ch = page[i]
+            if quote:
+                if escaped:
+                    escaped = False
+                elif ch == "\\\\":
+                    escaped = True
+                elif ch == quote:
+                    quote = None
+                continue
+            if ch in ("'", '"'):
+                quote = ch
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    end = i + 1
+                    break
+        if end is None:
+            continue
+        try:
+            value = json.loads(page[start:end])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict):
+            found.append(value)
+    return found
+
+
+def find_observe24h(value: Any) -> dict[str, Any] | None:
+    if isinstance(value, dict):
+        candidate = value.get("observe24h")
+        if isinstance(candidate, dict) and isinstance(candidate.get("od2"), list):
+            return candidate
+        for child in value.values():
+            result = find_observe24h(child)
+            if result is not None:
+                return result
+    elif isinstance(value, list):
+        for child in value:
+            result = find_observe24h(child)
+            if result is not None:
+                return result
+    return None
+
+
+def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any]]:
+    """Read the 24-hour hourly observation series embedded in the city page.
+
+    The page's observe24h.od2 entries use od21 (hour) and od26 (hourly rain).
+    od0 anchors the snapshot. We require exactly 24 consecutive hourly values
+    and verify every hour label before accepting any value.
+    """
+    page_url = f"https://www.weather.com.cn/weather/{code}.shtml"
+    request = urllib.request.Request(page_url + f"?_={int(time.time() * 1000)}", headers={
+        **HEADERS, "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+    })
+    with urllib.request.urlopen(request, timeout=15) as response:
+        page = response.read().decode("utf-8", errors="replace")
+
+    observe = None
+    for obj in extract_assigned_json_objects(page):
+        observe = find_observe24h(obj)
+        if observe is not None:
+            break
+    if observe is None:
+        # Some page versions assign observe24h directly rather than nesting it.
+        direct = re.search(r"observe24h\\s*=\\s*", page)
+        if direct:
+            wrapped = page[direct.end():]
+            for obj in extract_assigned_json_objects("var __wrapper = " + wrapped):
+                observe = obj
+                break
+    if observe is None:
+        raise ValueError("city page does not expose a parseable observe24h.od2 series")
+
+    anchor_raw = str(observe.get("od0", "")).strip()
+    try:
+        anchor = datetime.strptime(anchor_raw[:12], "%Y%m%d%H%M").replace(tzinfo=BEIJING)
+    except ValueError as exc:
+        raise ValueError(f"invalid observe24h snapshot time od0={anchor_raw!r}") from exc
+
+    points = observe.get("od2")
+    if not isinstance(points, list) or len(points) != 24:
+        raise ValueError(f"expected 24 hourly points, got {len(points) if isinstance(points, list) else 'non-list'}")
+
+    # The 24 bars represent the 24 completed one-hour intervals immediately
+    # preceding the snapshot time. od21 is the interval's starting hour.
+    first_hour = anchor.replace(minute=0, second=0, microsecond=0) - timedelta(hours=24)
+    result = []
+    for index, point in enumerate(points):
+        if not isinstance(point, dict):
+            raise ValueError(f"invalid hourly point at index {index}")
+        stamp = first_hour + timedelta(hours=index)
+        hour_raw = str(point.get("od21", "")).strip()
+        try:
+            hour_value = int(hour_raw)
+        except ValueError as exc:
+            raise ValueError(f"invalid od21 hour at index {index}: {hour_raw!r}") from exc
+        if hour_value != stamp.hour:
+            raise ValueError(
+                f"hour sequence mismatch at index {index}: od21={hour_value}, expected={stamp.hour}; "
+                "refusing to backfill with uncertain timestamps"
+            )
+        rain_value = as_mm(point.get("od26"))
+        result.append({
+            "city": name, "code": code,
+            "observed_at": stamp.isoformat(timespec="minutes"),
+            "date": stamp.date().isoformat(), "hour": stamp.hour,
+            "observation_date": stamp.date().isoformat(),
+            "observation_hour": stamp.hour,
+            "collected_at": now.isoformat(timespec="minutes"),
+            "collection_date": now.date().isoformat(), "collection_hour": now.hour,
+            "rain_1h_mm": rain_value, "rain_24h_mm": None,
+            "source": "China Weather rolling 24-hour hourly observation chart",
+            "source_url": page_url,
+            "field_1h": "observe24h.od2[].od26",
+            "field_24h": None,
+            "chart_snapshot_at": anchor.isoformat(timespec="minutes"),
+            "backfilled": True,
+            "status": "ok" if rain_value is not None else "missing_in_source",
+        })
+    return result
+
+
 def fetch_city(name: str, code: str, now: datetime) -> dict[str, Any]:
     url = BASE_URL.format(code=code) + f"?_={int(time.time() * 1000)}"
     request = urllib.request.Request(url, headers=HEADERS)
@@ -384,44 +518,47 @@ def main() -> int:
             print(f"ERROR {name} ({code}): {exc}")
         time.sleep(0.25)
 
-    # Late-arriving live observations: recheck recent gaps once after the
-    # normal collection pass. The China Weather endpoint is a CURRENT snapshot,
-    # not a historical query API, so accept a value only when its own timestamp
-    # exactly matches a missing city-hour in the last two hourly slots.
-    precheck = build_missing_report(data, now)
-    recent_keys = set()
-    for offset in (0, 1):
-        slot = (now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=offset))
-        recent_keys.add(slot.strftime("%Y-%m-%dT%H"))
-    gap_by_city = {
-        row["city"]: set(row["missing_hours"]).intersection(recent_keys)
-        for row in precheck["cities"]
+    # Backfill from the same rolling 24-hour hourly chart shown on each
+    # city weather page. Every run reads the latest 24-hour snapshot and fills
+    # only missing city-hours; existing valid observations are never overwritten.
+    chart_attempted = 0
+    chart_filled = 0
+    chart_unavailable = 0
+    chart_errors = []
+    existing_keys = {
+        (o.get("city"),
+         o.get("observation_date") or o.get("collection_date") or o.get("date"),
+         int(o.get("observation_hour", o.get("collection_hour", o.get("hour", -1)))))
+        for o in observations
     }
-    backfill_attempted = 0
-    backfill_filled = 0
-    backfill_pending = 0
     for name, code in CITIES:
-        target_gaps = gap_by_city.get(name, set())
-        if not target_gaps:
-            continue
-        backfill_attempted += 1
+        chart_attempted += 1
         try:
-            candidate = fetch_city_with_retry(name, code, now, attempts=2)
-            candidate_key = "{}T{:02d}".format(
-                candidate["observation_date"], int(candidate["observation_hour"]))
-            if candidate_key in target_gaps and candidate.get("rain_1h_mm") is not None:
-                observations.append(candidate)
-                backfill_filled += 1
-                print("BACKFILL OK {}: {} = {} mm".format(
-                    name, candidate_key, candidate["rain_1h_mm"]))
-            else:
-                backfill_pending += 1
-                print("BACKFILL WAIT {}: live feed timestamp {} does not match recent gap {}".format(
-                    name, candidate_key, sorted(target_gaps)))
+            chart_points = fetch_rolling_24h(name, code, now)
+            city_added = 0
+            for point in chart_points:
+                key = (name, point["observation_date"], point["observation_hour"])
+                old = next((o for o in observations
+                            if (o.get("city"),
+                                o.get("observation_date") or o.get("collection_date") or o.get("date"),
+                                int(o.get("observation_hour", o.get("collection_hour", o.get("hour", -1))))) == key), None)
+                if old is not None and old.get("rain_1h_mm") is not None:
+                    continue
+                if point.get("rain_1h_mm") is None:
+                    chart_unavailable += 1
+                    continue
+                if old is not None:
+                    observations[observations.index(old)] = point
+                else:
+                    observations.append(point)
+                existing_keys.add(key)
+                chart_filled += 1
+                city_added += 1
+            print(f"CHART BACKFILL {name}: filled {city_added} missing hours from rolling 24h chart")
         except Exception as exc:
-            backfill_pending += 1
-            print("BACKFILL ERROR {}: {}".format(name, exc))
-        time.sleep(0.2)
+            chart_errors.append({"city": name, "code": code, "error": str(exc)})
+            print(f"CHART BACKFILL ERROR {name}: {exc}")
+        time.sleep(0.35)
 
     unique = {}
     for item in sorted(observations, key=lambda x: x.get("collected_at") or x.get("observed_at", "")):
@@ -439,17 +576,18 @@ def main() -> int:
     data["missing_hours_report"] = build_missing_report(data, now)
     data["backfill_report"] = {
         "checked_at": now.isoformat(timespec="minutes"),
-        "mode": "late_live_observation_retry",
-        "source": "China Weather current observation endpoint",
-        "attempted_cities": backfill_attempted,
-        "filled_city_hours": backfill_filled,
-        "still_unfilled_attempts": backfill_pending,
-        "historical_api": "not_configured",
-        "limitation": "Current endpoint has no verified arbitrary historical-hour query; older gaps remain missing until a station-matched historical observation source is configured."
+        "mode": "rolling_24h_chart_backfill",
+        "source": "China Weather city page observe24h.od2[].od26",
+        "attempted_cities": chart_attempted,
+        "filled_city_hours": chart_filled,
+        "source_missing_points": chart_unavailable,
+        "failed_cities": chart_errors,
+        "window_hours": 24,
+        "policy": "fill only missing hours from the latest rolling 24-hour chart; never overwrite existing valid observations; reject any chart with invalid hour sequence",
     }
     data["note"] = (
-        "空值表示未取得可核实的实测数据，不代表0毫米；不使用预测或再分析数据填补实测缺测。"
-        "每5分钟尝试采集当前实况；历史接口不可用时，过去小时缺测会继续标记，不伪造回填。"
+        "每次采集均读取16个地区天气页面展示的最近24小时逐小时实况，并仅回填已有记录中缺失的小时。"
+        "图表时间序列校验失败或源数据缺失时保留空值；不使用预测值、不把累计值拆分为小时值。"
     )
 
     # Scheduled workflows can be delayed. Persist health once per 15-minute bucket
@@ -465,7 +603,7 @@ def main() -> int:
             "failures": failures,
             "history_policy": "one observation timestamp per city and Beijing hour; retry current feed every scheduled run",
             "source": "https://d1.weather.com.cn/sk_2d/{area_code}.html",
-            "historical_backfill": "not_available_from_live_endpoint",
+            "historical_backfill": "rolling_24h_chart_backfill",
         }
 
     after = json.dumps(data, ensure_ascii=False, sort_keys=True)
