@@ -220,6 +220,11 @@ def find_observe24h(value: Any) -> dict[str, Any] | None:
         for key in ("observe24h", "observe24h_data", "observe24hData"):
             candidate = value.get(key)
             if isinstance(candidate, dict):
+                # China Weather page commonly nests the 24-hour chart under
+                # observe24h_data.od, where od0 and od2 actually live.
+                inner = candidate.get("od")
+                if isinstance(inner, dict) and isinstance(inner.get("od2"), list):
+                    return inner
                 if isinstance(candidate.get("od2"), list):
                     return candidate
                 nested = find_observe24h(candidate)
