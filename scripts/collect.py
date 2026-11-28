@@ -420,7 +420,7 @@ def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any
             "rain_1h_mm": rain_value, "rain_24h_mm": None,
             "source": "China Weather rolling 24-hour hourly observation chart",
             "source_url": next((url for url, _ in pages if url.endswith(f"/{code}.shtml")), page_urls[0]),
-            "field_1h": "observe24h_data.od2[].od26",
+            "field_1h": "observe24h_data.od.od2[].od26",
             "field_24h": None,
             "chart_snapshot_at": anchor.isoformat(timespec="minutes"),
             "backfilled": True,
@@ -778,7 +778,7 @@ def main() -> int:
     data["backfill_report"] = {
         "checked_at": now.isoformat(timespec="minutes"),
         "mode": "rolling_24h_chart_backfill",
-        "source": "China Weather city page observe24h.od2[].od26",
+        "source": "China Weather city page observe24h_data.od.od2[].od26",
         "attempted_cities": chart_attempted,
         "filled_city_hours": chart_filled,
         "source_missing_points": chart_unavailable,
