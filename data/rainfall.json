@@ -106,7 +106,7 @@
     }
   ],
   "note": "空值表示未取得完整且可核实的实测数据，不代表0毫米；缺测小时不会补零。自动采集每5分钟重试，同一地区同一北京时间小时仅保留一条记录。",
-  "updated_at": "2026-11-28T08:54+08:00",
+  "updated_at": "2026-11-28T10:15+08:00",
   "regions": [
     {
       "name": "曲靖地区",
@@ -7713,10 +7713,282 @@
       "field_1h": "rain",
       "field_24h": "rain24h",
       "status": "ok"
+    },
+    {
+      "city": "华宁",
+      "code": "101290705",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290705.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "宜良",
+      "code": "101290106",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290106.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "峨山",
+      "code": "101290708",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290708.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "建水",
+      "code": "101290303",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290303.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "开远",
+      "code": "101290307",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290307.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "弥勒",
+      "code": "101290304",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290304.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "曲靖",
+      "code": "101290401",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290401.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "江川",
+      "code": "101290703",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290703.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "泸西",
+      "code": "101290311",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290311.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "澄江",
+      "code": "101290702",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290702.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "玉溪",
+      "code": "101290701",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290701.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "石屏",
+      "code": "101290302",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290302.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "石林",
+      "code": "101290107",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290107.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "蒙自",
+      "code": "101290309",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290309.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "通海",
+      "code": "101290704",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290704.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "陆良",
+      "code": "101290403",
+      "observed_at": "2026-11-28T09:55+08:00",
+      "date": "2026-11-28",
+      "hour": 9,
+      "collected_at": "2026-11-28T10:15+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 10,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290403.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
     }
   ],
   "last_collection": {
-    "checked_at": "2026-11-28T08:54+08:00",
+    "checked_at": "2026-11-28T10:15+08:00",
     "success_count": 16,
     "expected_count": 16,
     "failures": [],
@@ -7899,9 +8171,9 @@
   ],
   "missing_hours_report": {
     "timezone": "Asia/Shanghai (UTC+08:00)",
-    "window_start": "2026-11-27T09",
-    "window_end": "2026-11-28T08",
-    "generated_at": "2026-11-28T08:00+08:00",
+    "window_start": "2026-11-27T11",
+    "window_end": "2026-11-28T10",
+    "generated_at": "2026-11-28T10:00+08:00",
     "cities": [
       {
         "city": "曲靖",
@@ -7909,12 +8181,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -7923,12 +8195,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -7937,12 +8209,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -7951,12 +8223,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -7965,12 +8237,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -7979,12 +8251,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -7993,12 +8265,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -8007,12 +8279,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -8021,12 +8293,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -8035,12 +8307,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -8049,12 +8321,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -8063,12 +8335,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -8077,12 +8349,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -8091,12 +8363,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -8105,12 +8377,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       },
       {
@@ -8119,12 +8391,12 @@
         "coverage": 18,
         "expected": 24,
         "missing_hours": [
-          "2026-11-27T10",
           "2026-11-27T13",
           "2026-11-27T16",
           "2026-11-27T18",
           "2026-11-27T22",
-          "2026-11-28T01"
+          "2026-11-28T01",
+          "2026-11-28T09"
         ]
       }
     ]
