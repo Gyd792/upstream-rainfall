@@ -311,6 +311,91 @@ def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any
     return result
 
 
+def observation_datetime(item: dict[str, Any]) -> datetime | None:
+    """Return the actual observed timestamp, never the later collection time."""
+    raw = item.get("observed_at")
+    if raw:
+        try:
+            parsed = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+            return parsed.replace(tzinfo=BEIJING) if parsed.tzinfo is None else parsed.astimezone(BEIJING)
+        except ValueError:
+            pass
+    date_value = item.get("observation_date") or item.get("date")
+    hour_value = item.get("observation_hour", item.get("hour"))
+    if date_value is not None and hour_value is not None:
+        try:
+            return datetime.strptime(
+                f"{date_value} {int(hour_value):02d}", "%Y-%m-%d %H"
+            ).replace(tzinfo=BEIJING)
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def observation_hour_key(item: dict[str, Any]) -> tuple[str, str, int] | None:
+    """Canonical city/date/hour key based on the observation time."""
+    stamp = observation_datetime(item)
+    if stamp is None:
+        return None
+    return (str(item.get("city", "")), stamp.date().isoformat(), stamp.hour)
+
+
+def observation_rank(item: dict[str, Any]) -> tuple[int, float, float]:
+    """Prefer valid measurements, then newer observed time, then newer collection."""
+    stamp = observation_datetime(item)
+    observed_epoch = stamp.timestamp() if stamp else 0.0
+    try:
+        collected = datetime.fromisoformat(
+            str(item.get("collected_at") or "").replace("Z", "+00:00")
+        )
+        if collected.tzinfo is None:
+            collected = collected.replace(tzinfo=BEIJING)
+        collected_epoch = collected.timestamp()
+    except ValueError:
+        collected_epoch = 0.0
+    return (1 if item.get("rain_1h_mm") is not None else 0,
+            observed_epoch, collected_epoch)
+
+
+def upsert_observation(observations: list[dict[str, Any]],
+                       incoming: dict[str, Any]) -> str:
+    """Insert or update a city-hour only with a valid, newer real observation."""
+    key = observation_hour_key(incoming)
+    if key is None:
+        raise ValueError("incoming observation has no valid observed_at timestamp")
+    incoming_stamp = observation_datetime(incoming)
+    incoming["observation_date"] = incoming_stamp.date().isoformat()
+    incoming["observation_hour"] = incoming_stamp.hour
+    incoming["date"] = incoming_stamp.date().isoformat()
+    incoming["hour"] = incoming_stamp.hour
+    matches = [(i, old) for i, old in enumerate(observations)
+               if observation_hour_key(old) == key]
+    if not matches:
+        observations.append(incoming)
+        return "inserted"
+
+    # Keep a single canonical record for this city-hour. Existing valid values
+    # are protected from null responses; a later actual observation supersedes
+    # an earlier value for the same hour.
+    best_index, best = max(matches, key=lambda pair: observation_rank(pair[1]))
+    incoming_valid = incoming.get("rain_1h_mm") is not None
+    best_valid = best.get("rain_1h_mm") is not None
+    incoming_rank = observation_rank(incoming)
+    best_rank = observation_rank(best)
+    if incoming_valid and (not best_valid or incoming_rank[1:] >= best_rank[1:]):
+        observations[best_index] = incoming
+        action = "updated"
+    else:
+        action = "kept_existing"
+    # Remove duplicate legacy rows for this same city-hour.
+    for index, _ in reversed(matches):
+        if index != best_index:
+            del observations[index]
+            if index < best_index:
+                best_index -= 1
+    return action
+
+
 def fetch_city(name: str, code: str, now: datetime) -> dict[str, Any]:
     url = BASE_URL.format(code=code) + f"?_={int(time.time() * 1000)}"
     request = urllib.request.Request(url, headers=HEADERS)
@@ -323,14 +408,15 @@ def fetch_city(name: str, code: str, now: datetime) -> dict[str, Any]:
     if rain1_key is None:
         raise ValueError("1-hour precipitation field not found; returned keys=" +
                          ",".join(map(str, data.keys())))
+    observed_hour = observed_at.replace(minute=0, second=0, microsecond=0)
     return {
         "city": name, "code": code,
         "observed_at": observed_at.isoformat(timespec="minutes"),
-        "date": observed_at.date().isoformat(), "hour": observed_at.hour,
+        "date": observed_hour.date().isoformat(), "hour": observed_hour.hour,
         "collected_at": now.isoformat(timespec="minutes"),
         "collection_date": now.date().isoformat(), "collection_hour": now.hour,
-        "observation_date": observed_at.date().isoformat(),
-        "observation_hour": observed_at.hour,
+        "observation_date": observed_hour.date().isoformat(),
+        "observation_hour": observed_hour.hour,
         "rain_1h_mm": as_mm(rain1), "rain_24h_mm": as_mm(rain24),
         "source": "China Weather public observation endpoint",
         "source_url": BASE_URL.format(code=code),
@@ -516,17 +602,7 @@ def main() -> int:
     for name, code in CITIES:
         try:
             observation = fetch_city_with_retry(name, code, now, attempts=3)
-            key = (name, observation["observation_date"], observation["observation_hour"])
-            old = next((o for o in observations
-                        if (o.get("city"),
-                            o.get("observation_date") or o.get("collection_date") or o.get("date"),
-                            int(o.get("observation_hour", o.get("collection_hour", o.get("hour", -1))))) == key), None)
-            if old is None:
-                observations.append(observation)
-            elif (old.get("rain_1h_mm") != observation.get("rain_1h_mm")
-                  or old.get("rain_24h_mm") != observation.get("rain_24h_mm")
-                  or old.get("rain_1h_mm") is None):
-                observations[observations.index(old)] = observation
+            action = upsert_observation(observations, observation)
             success += 1
             print(f"OK {name}: {observation['observed_at']} 1h={observation['rain_1h_mm']}mm 24h={observation['rain_24h_mm']}mm")
         except Exception as exc:
@@ -553,41 +629,33 @@ def main() -> int:
             chart_points = fetch_rolling_24h(name, code, now)
             city_added = 0
             for point in chart_points:
-                key = (name, point["observation_date"], point["observation_hour"])
-                old = next((o for o in observations
-                            if (o.get("city"),
-                                o.get("observation_date") or o.get("collection_date") or o.get("date"),
-                                int(o.get("observation_hour", o.get("collection_hour", o.get("hour", -1))))) == key), None)
+                key = observation_hour_key(point)
+                old = next((o for o in observations if observation_hour_key(o) == key), None)
                 if old is not None and old.get("rain_1h_mm") is not None:
                     continue
                 if point.get("rain_1h_mm") is None:
                     chart_unavailable += 1
                     continue
-                if old is not None:
-                    observations[observations.index(old)] = point
-                else:
-                    observations.append(point)
-                existing_keys.add(key)
-                chart_filled += 1
-                city_added += 1
+                action = upsert_observation(observations, point)
+                if action in ("inserted", "updated"):
+                    chart_filled += 1
+                    city_added += 1
             print(f"CHART BACKFILL {name}: filled {city_added} missing hours from rolling 24h chart")
         except Exception as exc:
             chart_errors.append({"city": name, "code": code, "error": str(exc)})
             print(f"CHART BACKFILL ERROR {name}: {exc}")
         time.sleep(0.35)
 
-    unique = {}
-    for item in sorted(observations, key=lambda x: x.get("collected_at") or x.get("observed_at", "")):
-        key = (item.get("city"),
-               item.get("observation_date") or item.get("collection_date") or item.get("date"),
-               int(item.get("observation_hour", item.get("collection_hour", item.get("hour", -1)))))
+    unique: dict[tuple[str, str, int], dict[str, Any]] = {}
+    for item in observations:
+        key = observation_hour_key(item)
+        if key is None:
+            continue
         previous = unique.get(key)
-        if previous is None or (previous.get("rain_1h_mm") is None and item.get("rain_1h_mm") is not None):
-            unique[key] = item
-        elif previous.get("rain_1h_mm") == item.get("rain_1h_mm") and previous.get("rain_24h_mm") == item.get("rain_24h_mm"):
+        if previous is None or observation_rank(item) > observation_rank(previous):
             unique[key] = item
     data["hourly_observations"] = sorted(
-        unique.values(), key=lambda x: (x.get("collected_at") or x.get("observed_at", ""), x.get("city", "")))
+        unique.values(), key=lambda x: (x.get("observed_at", ""), x.get("city", "")))
     update_rollups(data, now)
     data["missing_hours_report"] = build_missing_report(data, now)
     data["backfill_report"] = {
@@ -599,11 +667,11 @@ def main() -> int:
         "source_missing_points": chart_unavailable,
         "failed_cities": chart_errors,
         "window_hours": 24,
-        "policy": "fill only missing hours from the latest rolling 24-hour chart; never overwrite existing valid observations; reject any chart with invalid hour sequence",
+        "policy": "fill missing city-hours only from verified rolling 24-hour observed chart values; live feed rechecks every run and newer valid observed_at values replace earlier values in the same city-hour; never copy adjacent-hour values",
     }
     data["note"] = (
-        "每次采集均读取16个地区天气页面展示的最近24小时逐小时实况，并仅回填已有记录中缺失的小时。"
-        "图表时间序列校验失败或源数据缺失时保留空值；不使用预测值、不把累计值拆分为小时值。"
+        "每次采集均重新检查当前实况，并按真实观测时间归入北京时间小时；同一小时取得更新的真实观测值时更新该小时记录。"
+        "最近24小时图表仅在成功取得并验证逐小时实测值时补齐缺测；图表解析失败或源数据缺失时保留空值，不使用预测值、不复制相邻小时数据。"
     )
 
     # Scheduled workflows can be delayed. Persist health once per 15-minute bucket
@@ -617,7 +685,7 @@ def main() -> int:
             "health_bucket": health_bucket.isoformat(timespec="minutes"),
             "success_count": success, "expected_count": len(CITIES),
             "failures": failures,
-            "history_policy": "one observation timestamp per city and Beijing hour; retry current feed every scheduled run",
+            "history_policy": "group by actual observed_at Beijing hour; every scheduled run rechecks the current hour; newer valid observation timestamps replace older values within the same city-hour",
             "source": "https://d1.weather.com.cn/sk_2d/{area_code}.html",
             "historical_backfill": "rolling_24h_chart_backfill",
         }
