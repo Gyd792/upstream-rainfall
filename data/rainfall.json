@@ -106,7 +106,7 @@
     }
   ],
   "note": "每次采集均重新检查当前实况，并按真实观测时间归入北京时间小时；同一小时取得更新的真实观测值时更新该小时记录。最近24小时图表仅在成功取得并验证逐小时实测值时补齐缺测；图表解析失败或源数据缺失时保留空值，不使用预测值、不复制相邻小时数据。",
-  "updated_at": "2026-11-28T19:19:00+08:00",
+  "updated_at": "2026-11-28T19:35:00+08:00",
   "regions": [
     {
       "name": "曲靖地区",
@@ -10210,31 +10210,12 @@
       "status": "ok"
     },
     {
-      "city": "建水",
-      "code": "101290303",
-      "observed_at": "2026-11-28T19:00+08:00",
-      "date": "2026-11-28",
-      "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
-      "collection_date": "2026-11-28",
-      "collection_hour": 19,
-      "observation_date": "2026-11-28",
-      "observation_hour": 19,
-      "rain_1h_mm": 0.0,
-      "rain_24h_mm": 0.0,
-      "source": "China Weather public observation endpoint",
-      "source_url": "https://d1.weather.com.cn/sk_2d/101290303.html",
-      "field_1h": "rain",
-      "field_24h": "rain24h",
-      "status": "ok"
-    },
-    {
       "city": "华宁",
       "code": "101290705",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10250,10 +10231,10 @@
     {
       "city": "宜良",
       "code": "101290106",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10269,10 +10250,10 @@
     {
       "city": "峨山",
       "code": "101290708",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10286,12 +10267,31 @@
       "status": "ok"
     },
     {
-      "city": "开远",
-      "code": "101290307",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "city": "建水",
+      "code": "101290303",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
+      "collection_date": "2026-11-28",
+      "collection_hour": 19,
+      "observation_date": "2026-11-28",
+      "observation_hour": 19,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "source": "China Weather public observation endpoint",
+      "source_url": "https://d1.weather.com.cn/sk_2d/101290303.html",
+      "field_1h": "rain",
+      "field_24h": "rain24h",
+      "status": "ok"
+    },
+    {
+      "city": "开远",
+      "code": "101290307",
+      "observed_at": "2026-11-28T19:20+08:00",
+      "date": "2026-11-28",
+      "hour": 19,
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10307,10 +10307,10 @@
     {
       "city": "弥勒",
       "code": "101290304",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10326,10 +10326,10 @@
     {
       "city": "曲靖",
       "code": "101290401",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10345,10 +10345,10 @@
     {
       "city": "江川",
       "code": "101290703",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10364,10 +10364,10 @@
     {
       "city": "泸西",
       "code": "101290311",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10383,10 +10383,10 @@
     {
       "city": "澄江",
       "code": "101290702",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10402,10 +10402,10 @@
     {
       "city": "玉溪",
       "code": "101290701",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10421,10 +10421,10 @@
     {
       "city": "石屏",
       "code": "101290302",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10440,10 +10440,10 @@
     {
       "city": "石林",
       "code": "101290107",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10459,10 +10459,10 @@
     {
       "city": "蒙自",
       "code": "101290309",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10478,10 +10478,10 @@
     {
       "city": "通海",
       "code": "101290704",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10497,10 +10497,10 @@
     {
       "city": "陆良",
       "code": "101290403",
-      "observed_at": "2026-11-28T19:05+08:00",
+      "observed_at": "2026-11-28T19:20+08:00",
       "date": "2026-11-28",
       "hour": 19,
-      "collected_at": "2026-11-28T19:19+08:00",
+      "collected_at": "2026-11-28T19:35+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10515,8 +10515,8 @@
     }
   ],
   "last_collection": {
-    "checked_at": "2026-11-28T19:19+08:00",
-    "health_bucket": "2026-11-28T19:15+08:00",
+    "checked_at": "2026-11-28T19:35+08:00",
+    "health_bucket": "2026-11-28T19:30+08:00",
     "success_count": 16,
     "expected_count": 16,
     "failures": [],
@@ -10887,7 +10887,7 @@
     ]
   },
   "backfill_report": {
-    "checked_at": "2026-11-28T19:19+08:00",
+    "checked_at": "2026-11-28T19:35+08:00",
     "mode": "rolling_24h_chart_backfill",
     "source": "China Weather city page observe24h_data.od.od2[].od26",
     "attempted_cities": 16,
@@ -10898,67 +10898,67 @@
       {
         "city": "曲靖",
         "code": "101290401",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "陆良",
         "code": "101290403",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "宜良",
         "code": "101290106",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "石林",
         "code": "101290107",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "澄江",
         "code": "101290702",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "江川",
         "code": "101290703",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "玉溪",
         "code": "101290701",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "峨山",
         "code": "101290708",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "通海",
         "code": "101290704",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "华宁",
         "code": "101290705",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "建水",
         "code": "101290303",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "蒙自",
         "code": "101290309",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "石屏",
         "code": "101290302",
-        "error": "invalid hourly label at index 0: '18'"
+        "error": "invalid hourly label at index 0: '19'"
       },
       {
         "city": "开远",
