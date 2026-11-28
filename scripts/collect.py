@@ -161,54 +161,96 @@ def parse_observation_time(data: dict[str, Any], now: datetime) -> datetime:
     raise ValueError(f"unrecognized observation timestamp: {raw}; date={date_raw or 'missing'}")
 
 
-def extract_assigned_json_objects(page: str) -> list[dict[str, Any]]:
-    """Extract strict-JSON JavaScript assignment objects from the weather page."""
-    found: list[dict[str, Any]] = []
-    for match in re.finditer(r"(?:var|let|const)\s+[A-Za-z_$][\w$]*\s*=\s*", page):
-        start = page.find("{", match.end())
-        if start < 0 or start - match.end() > 8:
+def extract_js_values(text: str, names: tuple[str, ...]) -> list[Any]:
+    """Extract JSON-compatible object/array values assigned to known JS globals."""
+    found: list[Any] = []
+    name_pattern = "|".join(re.escape(name) for name in names)
+    assignment = re.compile(
+        r"(?:(?:var|let|const)\s+)?(?:" + name_pattern + r")\s*=\s*",
+        re.IGNORECASE,
+    )
+    for match in assignment.finditer(text):
+        start = match.end()
+        while start < len(text) and text[start].isspace():
+            start += 1
+        if start >= len(text) or text[start] not in "[{":
             continue
-        depth, quote, escaped, end = 0, None, False, None
-        for i in range(start, len(page)):
-            ch = page[i]
+        opening = text[start]
+        closing = "}" if opening == "{" else "]"
+        stack = []
+        quote = None
+        escaped = False
+        end = None
+        for index in range(start, len(text)):
+            char = text[index]
             if quote:
                 if escaped:
                     escaped = False
-                elif ch == "\\":
+                elif char == "\\":
                     escaped = True
-                elif ch == quote:
+                elif char == quote:
                     quote = None
                 continue
-            if ch in ("'", '"'):
-                quote = ch
-            elif ch == "{":
-                depth += 1
-            elif ch == "}":
-                depth -= 1
-                if depth == 0:
-                    end = i + 1
+            if char in ("'", '"'):
+                quote = char
+            elif char in "[{":
+                stack.append("}" if char == "{" else "]")
+            elif char in "]}":
+                if not stack or stack[-1] != char:
+                    break
+                stack.pop()
+                if not stack:
+                    end = index + 1
                     break
         if end is None:
             continue
+        raw = text[start:end]
         try:
-            value = json.loads(page[start:end])
+            found.append(json.loads(raw))
         except json.JSONDecodeError:
+            # Never eval page JavaScript. Only accept strict JSON payloads.
             continue
-        if isinstance(value, dict):
-            found.append(value)
     return found
 
 
 def find_observe24h(value: Any) -> dict[str, Any] | None:
+    """Find the 24-hour observed series in either page-global data shape."""
     if isinstance(value, dict):
-        candidate = value.get("observe24h")
-        if isinstance(candidate, dict) and isinstance(candidate.get("od2"), list):
-            return candidate
+        # Current and legacy names used by China Weather page scripts.
+        for key in ("observe24h", "observe24h_data", "observe24hData"):
+            candidate = value.get(key)
+            if isinstance(candidate, dict):
+                if isinstance(candidate.get("od2"), list):
+                    return candidate
+                nested = find_observe24h(candidate)
+                if nested is not None:
+                    return nested
+            if isinstance(candidate, list):
+                nested = find_observe24h(candidate)
+                if nested is not None:
+                    return nested
+        if isinstance(value.get("od2"), list):
+            return value
+        # Some versions expose the hourly point list directly.
+        for key in ("data", "list", "hours", "hourly", "rows"):
+            candidate = value.get(key)
+            if isinstance(candidate, list) and candidate and all(
+                isinstance(item, dict) and ("od21" in item or "time" in item)
+                and ("od26" in item or "rain" in item or "precip" in item)
+                for item in candidate
+            ):
+                return {"od0": value.get("od0") or value.get("time"), "od2": candidate}
         for child in value.values():
             result = find_observe24h(child)
             if result is not None:
                 return result
     elif isinstance(value, list):
+        if value and all(
+            isinstance(item, dict) and ("od21" in item or "time" in item)
+            and ("od26" in item or "rain" in item or "precip" in item)
+            for item in value
+        ):
+            return {"od2": value}
         for child in value:
             result = find_observe24h(child)
             if result is not None:
@@ -216,81 +258,144 @@ def find_observe24h(value: Any) -> dict[str, Any] | None:
     return None
 
 
-def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any]]:
-    """Read the 24-hour hourly observation series embedded in the city page.
-
-    The page's observe24h.od2 entries use od21 (hour) and od26 (hourly rain).
-    od0 anchors the snapshot. We require exactly 24 consecutive hourly values
-    and verify every hour label before accepting any value.
-    """
-    page_url = f"https://www.weather.com.cn/weather/{code}.shtml"
-    request = urllib.request.Request(page_url + f"?_={int(time.time() * 1000)}", headers={
-        **HEADERS, "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+def fetch_page_text(url: str) -> str:
+    request = urllib.request.Request(url, headers={
+        **HEADERS,
+        "Accept": "text/html,application/xhtml+xml,application/javascript,text/javascript,*/*;q=0.8",
     })
-    with urllib.request.urlopen(request, timeout=15) as response:
-        page = response.read().decode("utf-8", errors="replace")
+    with urllib.request.urlopen(request, timeout=20) as response:
+        return response.read().decode("utf-8", errors="replace")
+
+
+def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any]]:
+    """Read the city's observed 24-hour chart and its page-loaded data scripts.
+
+    The chart may be initialized by a page global (observe24h_data) or a
+    separate JavaScript resource. Inspect both the standard and one-day page.
+    Accept only a verified 24-hour sequence of observed rainfall values.
+    """
+    page_urls = [
+        f"https://www.weather.com.cn/weather/{code}.shtml",
+        f"https://www.weather.com.cn/weather1d/{code}.shtml",
+    ]
+    pages: list[tuple[str, str]] = []
+    script_urls: list[str] = []
+    for page_url in page_urls:
+        try:
+            page = fetch_page_text(page_url + f"?_={int(time.time() * 1000)}")
+            pages.append((page_url, page))
+            for src in re.findall(r"""<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["']""", page, re.I):
+                absolute = urllib.parse.urljoin(page_url, src)
+                host = urllib.parse.urlparse(absolute).hostname or ""
+                if host.endswith(("weather.com.cn", "tq121.com.cn")) and absolute not in script_urls:
+                    script_urls.append(absolute)
+        except Exception as exc:
+            print(f"CHART PAGE WARNING {name} {page_url}: {exc}")
+
+    # First inspect inline globals. The 24h series has appeared under multiple
+    # names in different China Weather page builds.
+    candidate_values: list[Any] = []
+    for _, page in pages:
+        candidate_values.extend(extract_js_values(
+            page, ("observe24h", "observe24h_data", "observe24hData", "observe24hDataJson")
+        ))
+        for obj in extract_assigned_json_objects(page):
+            candidate_values.append(obj)
+
+    # If the HTML only references the chart payload, inspect likely weather
+    # scripts. Keep the request count bounded and stay on China Weather hosts.
+    relevant_scripts = [
+        url for url in script_urls
+        if re.search(r"(observe|weather|hour|chart|sk_2d)", url, re.I)
+    ][:12]
+    for script_url in relevant_scripts:
+        try:
+            script_text = fetch_page_text(script_url)
+            candidate_values.extend(extract_js_values(
+                script_text, ("observe24h", "observe24h_data", "observe24hData", "observe24hDataJson")
+            ))
+            for obj in extract_assigned_json_objects(script_text):
+                candidate_values.append(obj)
+        except Exception as exc:
+            print(f"CHART SCRIPT WARNING {name} {script_url}: {exc}")
 
     observe = None
-    for obj in extract_assigned_json_objects(page):
-        observe = find_observe24h(obj)
+    for value in candidate_values:
+        observe = find_observe24h(value)
         if observe is not None:
             break
+
     if observe is None:
-        # Some page versions assign observe24h directly rather than nesting it.
-        direct = re.search(r"observe24h\s*=\s*", page)
-        if direct:
-            wrapped = page[direct.end():]
-            for obj in extract_assigned_json_objects("var __wrapper = " + wrapped):
-                observe = obj
-                break
-    if observe is None:
-        raise ValueError("city page does not expose a parseable observe24h.od2 series")
+        # Emit useful, bounded diagnostics so the next source change is
+        # evidence-based rather than guessing another field name.
+        page_text = "\n".join(page for _, page in pages)
+        globals_seen = sorted(set(re.findall(
+            r"(?:var|let|const)\s+([A-Za-z_$][\w$]*(?:observe|hour|rain)[\w$]*)\s*=",
+            page_text, re.I
+        )))
+        script_names = [urllib.parse.urlparse(url).path.rsplit("/", 1)[-1] for url in relevant_scripts]
+        raise ValueError(
+            "24h chart series not found; page_globals=" + ",".join(globals_seen[:20]) +
+            "; chart_scripts=" + ",".join(script_names[:12]) +
+            "; pages=" + str(len(pages))
+        )
 
     anchor_raw = str(observe.get("od0", "")).strip()
-    try:
-        anchor = datetime.strptime(anchor_raw[:12], "%Y%m%d%H%M").replace(tzinfo=BEIJING)
-    except ValueError as exc:
-        raise ValueError(f"invalid observe24h snapshot time od0={anchor_raw!r}") from exc
+    anchor = None
+    for fmt in ("%Y%m%d%H%M", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S"):
+        try:
+            anchor = datetime.strptime(anchor_raw[:19], fmt).replace(tzinfo=BEIJING)
+            break
+        except ValueError:
+            continue
 
     points = observe.get("od2")
     if not isinstance(points, list) or len(points) != 24:
-        raise ValueError(f"expected 24 hourly points, got {len(points) if isinstance(points, list) else 'non-list'}")
+        raise ValueError(
+            f"24h chart series found but has invalid point count: "
+            f"{len(points) if isinstance(points, list) else 'non-list'}"
+        )
 
-    # od0 is the chart's observation-time anchor. od21 carries each bar's
-    # hour label. Infer whether the 24-point sequence is ascending or descending
-    # from its labels, then anchor the uniquely matching hour to od0. This avoids
-    # assuming array order and correctly handles midnight rollover.
-    anchor = anchor.replace(minute=0, second=0, microsecond=0)
-    hour_values = []
+    hour_values: list[int] = []
     for index, point in enumerate(points):
         if not isinstance(point, dict):
             raise ValueError(f"invalid hourly point at index {index}")
-        raw_hour = str(point.get("od21", "")).strip()
-        match = re.search(r"(?:^|\\s)(\\d{1,2})(?::\\d{2})?$", raw_hour)
+        raw_hour = str(point.get("od21", point.get("time", ""))).strip()
+        match = re.search(r"(?:^|\s)(\d{1,2})(?::\d{2})?$", raw_hour)
         if not match:
-            raise ValueError(f"invalid od21 hour at index {index}: {raw_hour!r}")
+            raise ValueError(f"invalid hourly label at index {index}: {raw_hour!r}")
         hour_value = int(match.group(1))
         if not 0 <= hour_value <= 23:
-            raise ValueError(f"od21 hour out of range at index {index}: {raw_hour!r}")
+            raise ValueError(f"hour out of range at index {index}: {raw_hour!r}")
         hour_values.append(hour_value)
 
-    if len(set(hour_values)) != 24:
-        raise ValueError("od21 does not contain 24 unique hourly labels")
-    ascending = all((hour_values[i] + 1) % 24 == hour_values[i + 1]
-                    for i in range(23))
-    descending = all((hour_values[i] - 1) % 24 == hour_values[i + 1]
-                     for i in range(23))
-    if not (ascending or descending):
-        raise ValueError("od21 labels are not a continuous 24-hour sequence")
+    ascending = all((hour_values[i] + 1) % 24 == hour_values[i + 1] for i in range(23))
+    descending = all((hour_values[i] - 1) % 24 == hour_values[i + 1] for i in range(23))
+    if len(set(hour_values)) != 24 or not (ascending or descending):
+        raise ValueError("chart hour labels are not a unique continuous 24-hour sequence")
+
+    if anchor is None:
+        # If the data points carry full dates/timestamps, use those. Never infer
+        # a date from collection time for hour-only values.
+        first_full = next((str(p.get("od21") or p.get("time") or "") for p in points
+                           if re.search(r"\d{4}[-/]\d{1,2}[-/]\d{1,2}", str(p.get("od21") or p.get("time") or ""))), None)
+        if first_full is None:
+            raise ValueError(f"chart snapshot anchor od0 is missing or invalid: {anchor_raw!r}")
+        anchor = datetime.fromisoformat(first_full.replace("/", "-")).replace(tzinfo=BEIJING)
+        anchor = anchor.replace(minute=0, second=0, microsecond=0)
+
+    anchor = anchor.replace(minute=0, second=0, microsecond=0)
     anchor_positions = [i for i, hour in enumerate(hour_values) if hour == anchor.hour]
     if len(anchor_positions) != 1:
-        raise ValueError("od0 anchor hour cannot be uniquely matched to od21 labels")
+        raise ValueError("chart snapshot hour cannot be matched uniquely to hourly labels")
     anchor_index = anchor_positions[0]
+
     result = []
     for index, point in enumerate(points):
         offset = index - anchor_index if ascending else anchor_index - index
         stamp = anchor + timedelta(hours=offset)
-        rain_value = as_mm(point.get("od26"))
+        raw_rain = point.get("od26", point.get("rain", point.get("precip")))
+        rain_value = as_mm(raw_rain)
         result.append({
             "city": name, "code": code,
             "observed_at": stamp.isoformat(timespec="minutes"),
@@ -301,15 +406,14 @@ def fetch_rolling_24h(name: str, code: str, now: datetime) -> list[dict[str, Any
             "collection_date": now.date().isoformat(), "collection_hour": now.hour,
             "rain_1h_mm": rain_value, "rain_24h_mm": None,
             "source": "China Weather rolling 24-hour hourly observation chart",
-            "source_url": page_url,
-            "field_1h": "observe24h.od2[].od26",
+            "source_url": next((url for url, _ in pages if url.endswith(f"/{code}.shtml")), page_urls[0]),
+            "field_1h": "observe24h_data.od2[].od26",
             "field_24h": None,
             "chart_snapshot_at": anchor.isoformat(timespec="minutes"),
             "backfilled": True,
             "status": "ok" if rain_value is not None else "missing_in_source",
         })
     return result
-
 
 def observation_datetime(item: dict[str, Any]) -> datetime | None:
     """Return the actual observed timestamp, never the later collection time."""
