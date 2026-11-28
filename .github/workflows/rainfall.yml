@@ -49,11 +49,30 @@ jobs:
           if [ -f data/rainfall.json ]; then
             python -c 'import json; d=json.load(open("data/rainfall.json",encoding="utf-8")); lc=d.get("last_collection",{}); mr=d.get("missing_hours_report",{}); print("- Last saved check (Beijing): {}".format(lc.get("checked_at","unknown"))); print("- Successful cities: {}/{}".format(lc.get("success_count","?"),lc.get("expected_count",16))); print("- Missing city-hours in rolling 24h: {}/{}".format(mr.get("missing_hour_count","?"),mr.get("expected_hour_count",384)))' >> "$GITHUB_STEP_SUMMARY"
           fi
-      - name: Commit rainfall history
+      - name: Commit rainfall history (merge-safe retry)
         run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+users.noreply.github.com"
-          git add data/rainfall.json
-          git diff --cached --quiet || git commit -m "Update rainfall observations"
-          git pull --rebase origin main
-          git push
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            # Keep the freshly collected working-tree JSON while moving the
+            # commit base to the newest main branch.
+            git reset --mixed origin/main
+            git show origin/main:data/rainfall.json > /tmp/rainfall-remote.json
+            python scripts/merge_rainfall.py data/rainfall.json /tmp/rainfall-remote.json
+            git add data/rainfall.json
+            if git diff --cached --quiet; then
+              echo "No rainfall data changes to publish."
+              exit 0
+            fi
+            git commit -m "Update rainfall observations"
+            if git push origin HEAD:main; then
+              echo "Rainfall history pushed successfully."
+              exit 0
+            fi
+            echo "Push raced with another update; merging latest main and retrying ($attempt/5)."
+            sleep 3
+          done
+          echo "::error::Could not publish rainfall data after 5 merge-safe attempts."
+          exit 1
