@@ -43,6 +43,7 @@ main{padding:20px clamp(12px,2.5vw,32px) 36px;max-width:1800px;margin:auto}
       <div class="metric"><span>最近一次采集检查（北京时间）</span><b id="healthCheckedAt">等待数据</b><span id="healthAge">采集任务状态待确认</span></div>
       <div class="metric"><span>本次成功获取地区数</span><b id="healthSuccess">— / 16</b><span id="healthFailures">失败地区：待检查</span></div>
       <div class="metric"><span>最近24小时缺测小时数</span><b id="healthMissing">— / 384</b><span id="healthCoverage">有效小时数：等待统计</span></div>
+      <div class="metric"><span>本次自动回填小时数</span><b id="healthBackfill">—</b><span id="healthBackfillInfo">等待图表补采结果</span></div>
     </div>
     <p class="foot">采集任务由 GitHub Actions 定时执行，可能受平台排队影响；手机页面每5分钟刷新一次展示数据，不代表上游观测数据每5分钟更新。缺测仅在取得可核实实测值后回填。</p>
   </section>
@@ -459,6 +460,11 @@ async function loadRainData({silent=false}={}){
   const failureNames=(health.failures||[]).map(x=>x.city).filter(Boolean);
   $('healthFailures').textContent=failureNames.length?'失败地区：'+failureNames.join('、'):'失败地区：无（最近保存的检查记录）';
   $('healthAge').textContent=health.health_bucket?'状态统计区间：'+health.health_bucket:'最近一次持久化采集状态';
+  const backfill=data.backfill_report||{};
+  $('healthBackfill').textContent=backfill.filled_city_hours??'—';
+  $('healthBackfillInfo').textContent=backfill.checked_at
+    ? '最近检查：'+backfill.checked_at+'；失败地区：'+((backfill.failed_cities||[]).length)
+    : '等待图表补采结果';
   $('queryStatus').textContent='已读取 '+observations.length+' 条逐小时快照；最近采集 '+(data.last_collection?.checked_at||'未知')+'；成功 '+(data.last_collection?.success_count??'—')+'/'+(data.last_collection?.expected_count??16);
   if(!window.initialHourlyRangeSet && $('recordMode').value==='hourly'){
    setRecent24HourRange();
