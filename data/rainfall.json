@@ -106,7 +106,7 @@
     }
   ],
   "note": "每次采集均重新检查当前实况，并按真实观测时间归入北京时间小时；同一小时取得更新的真实观测值时更新该小时记录。最近24小时图表仅在成功取得并验证逐小时实测值时补齐缺测；图表解析失败或源数据缺失时保留空值，不使用预测值、不复制相邻小时数据。",
-  "updated_at": "2026-11-28T19:04:00+08:00",
+  "updated_at": "2026-11-28T19:05:00+08:00",
   "regions": [
     {
       "name": "曲靖地区",
@@ -9911,7 +9911,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -9930,7 +9930,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -9949,7 +9949,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -9968,7 +9968,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -9987,7 +9987,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10006,7 +10006,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10025,7 +10025,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10044,7 +10044,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10063,7 +10063,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10082,7 +10082,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10101,7 +10101,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10120,7 +10120,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10139,7 +10139,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10158,7 +10158,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10177,7 +10177,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10196,7 +10196,7 @@
       "observed_at": "2026-11-28T18:45+08:00",
       "date": "2026-11-28",
       "hour": 18,
-      "collected_at": "2026-11-28T19:04+08:00",
+      "collected_at": "2026-11-28T19:05+08:00",
       "collection_date": "2026-11-28",
       "collection_hour": 19,
       "observation_date": "2026-11-28",
@@ -10599,7 +10599,7 @@
     ]
   },
   "backfill_report": {
-    "checked_at": "2026-11-28T19:04+08:00",
+    "checked_at": "2026-11-28T19:05+08:00",
     "mode": "rolling_24h_chart_backfill",
     "source": "China Weather city page observe24h_data.od.od2[].od26",
     "attempted_cities": 16,
@@ -10609,82 +10609,82 @@
       {
         "city": "曲靖",
         "code": "101290401",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "陆良",
         "code": "101290403",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "宜良",
         "code": "101290106",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "石林",
         "code": "101290107",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "澄江",
         "code": "101290702",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "江川",
         "code": "101290703",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "玉溪",
         "code": "101290701",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "峨山",
         "code": "101290708",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "通海",
         "code": "101290704",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "华宁",
         "code": "101290705",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "建水",
         "code": "101290303",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "蒙自",
         "code": "101290309",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "石屏",
         "code": "101290302",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "开远",
         "code": "101290307",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "弥勒",
         "code": "101290304",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       },
       {
         "city": "泸西",
         "code": "101290311",
-        "error": "24h chart series found but has invalid point count: 25"
+        "error": "invalid hourly label at index 0: '18'"
       }
     ],
     "window_hours": 24,
