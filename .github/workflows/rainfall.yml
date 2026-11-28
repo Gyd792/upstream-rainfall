@@ -47,15 +47,7 @@ jobs:
           echo "- Finished at (UTC): $(date -u '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_STEP_SUMMARY"
           echo "- Collector exit status is shown in the preceding step." >> "$GITHUB_STEP_SUMMARY"
           if [ -f data/rainfall.json ]; then
-            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-import json
-d=json.load(open("data/rainfall.json",encoding="utf-8"))
-lc=d.get("last_collection",{})
-mr=d.get("missing_hours_report",{})
-print(f"- Last saved check (Beijing): {lc.get('checked_at','unknown')}")
-print(f"- Successful cities: {lc.get('success_count','?')}/{lc.get('expected_count',16)}")
-print(f"- Missing city-hours in rolling 24h: {mr.get('missing_hour_count','?')}/{mr.get('expected_hour_count',384)}")
-PY
+            python -c 'import json; d=json.load(open("data/rainfall.json",encoding="utf-8")); lc=d.get("last_collection",{}); mr=d.get("missing_hours_report",{}); print("- Last saved check (Beijing): {}".format(lc.get("checked_at","unknown"))); print("- Successful cities: {}/{}".format(lc.get("success_count","?"),lc.get("expected_count",16))); print("- Missing city-hours in rolling 24h: {}/{}".format(mr.get("missing_hour_count","?"),mr.get("expected_hour_count",384)))' >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Commit rainfall history
         run: |
